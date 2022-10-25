@@ -2,7 +2,6 @@ import 'package:easy_park/screens/auth/login_page.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/services/auth.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget with PreferredSizeWidget {

@@ -1,5 +1,4 @@
 import 'package:easy_park/ui_components/ui_specs.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatefulWidget {

@@ -1,4 +1,3 @@
-import 'package:easy_park/main.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth.dart';
