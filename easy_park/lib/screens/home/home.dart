@@ -111,33 +111,77 @@ class _HomeState extends State<Home> {
                   if (_markers.isEmpty) {
                     _getMarkers(snapshot.data[1]);
                   }
-                  return MultiSplitView(
-                      axis: Axis.vertical,
-                      resizable: false,
-                      controller:
-                          MultiSplitViewController(areas: [Area(weight: 0.7)]),
-                      children: [
-                        GoogleMap(
-                            mapType: MapType.normal,
-                            initialCameraPosition: snapshot.data[0],
-                            myLocationEnabled: true,
-                            markers: _markers,
-                            onMapCreated: (GoogleMapController controller) {
-                              if (!_controller.isCompleted) {
-                                _controller.complete(controller);
-                              }
-                            }),
-                        Scaffold(
-                          floatingActionButton: FloatingActionButton(
-                            onPressed: () {
-                              _getMarkers(snapshot.data[1]);
-                            },
-                            child: Icon(Icons.refresh),
-                          ),
-                          floatingActionButtonLocation:
-                              FloatingActionButtonLocation.centerFloat,
-                        ),
-                      ]);
+                  return MultiSplitViewTheme(
+                      data: MultiSplitViewThemeData(
+                          dividerThickness: 3,
+                          dividerPainter:
+                              DividerPainters.background(color: Colors.grey)),
+                      child: MultiSplitView(
+                          axis: Axis.vertical,
+                          // Maybe will be resizable in future
+                          resizable: false,
+                          controller: MultiSplitViewController(
+                              areas: [Area(weight: 0.8)]),
+                          children: [
+                            Scaffold(
+                                floatingActionButton:
+                                    FloatingActionButton.extended(
+                                  backgroundColor: Colors.blueGrey,
+                                  onPressed: () {
+                                    _getMarkers(snapshot.data[1]);
+                                  },
+                                  label: const Text(
+                                    "REFRESH",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                  ),
+                                ),
+                                floatingActionButtonLocation:
+                                    FloatingActionButtonLocation.startFloat,
+                                body: GoogleMap(
+                                    mapType: MapType.normal,
+                                    initialCameraPosition: snapshot.data[0],
+                                    myLocationEnabled: true,
+                                    markers: _markers,
+                                    onMapCreated:
+                                        (GoogleMapController controller) {
+                                      if (!_controller.isCompleted) {
+                                        _controller.complete(controller);
+                                      }
+                                    })),
+                            MultiSplitView(children: [
+                              InkWell(
+                                  enableFeedback: true,
+                                  onTap: () {},
+                                  child: Container(
+                                    child: const Icon(
+                                      Icons.local_parking,
+                                      size: 100,
+                                    ),
+                                  )),
+                              InkWell(
+                                  enableFeedback: true,
+                                  onTap: () {},
+                                  child: Container(
+                                    child: const Icon(
+                                      Icons.attach_money,
+                                      size: 100,
+                                    ),
+                                  )),
+                              InkWell(
+                                  enableFeedback: true,
+                                  onTap: () {},
+                                  child: Container(
+                                    child: const Icon(
+                                      Icons.question_answer,
+                                      size: 100,
+                                    ),
+                                  )),
+                            ])
+                          ]));
                 }
                 if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
