@@ -4,6 +4,7 @@ import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
+import 'package:easy_park/ui_components/home_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -19,10 +20,10 @@ class Home extends StatefulWidget {
 typedef MarkerUpdateAction = Marker Function(Marker marker);
 
 class _HomeState extends State<Home> {
-  Completer<GoogleMapController> _controller = Completer();
+  final Completer<GoogleMapController> _controller = Completer();
   late Future<CameraPosition> _crtPosition;
   late Future<List<ParkingInfo>> _parkingSpots;
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
   SqlService sqlService = SqlService();
 
   @override
@@ -51,21 +52,16 @@ class _HomeState extends State<Home> {
 
   Future<void> _getMarkers(List<ParkingInfo> spots) async {
     if (_markers.isEmpty) {
-      for (ParkingInfo s in spots) {
+      for (ParkingInfo spot in spots) {
         _markers.add(Marker(
-                //add first marker
-                markerId: MarkerId(s.sensorId.toString()),
-                position: s.position, //position of marker
-                infoWindow: InfoWindow(
-                  //popup info
-                  title: 'Spot #${s.sensorId}',
-                  snippet: 'Price: ${s.zone.hourRate}RON/h',
-                ),
-                // icon: getMarkerIcon()
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed))
-            //Icon for Marker
-            );
+            markerId: MarkerId(spot.sensorId.toString()),
+            position: spot.position, //position of marker
+            infoWindow: InfoWindow(
+              //popup info
+              title: 'Spot #${spot.sensorId}',
+              snippet: 'Price: ${spot.zone.hourRate}RON/h',
+            ),
+            icon: getMarkerIcon(spot.occupied)));
       }
     } else {
       Set<Marker> newMarkers = {};
@@ -91,39 +87,41 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: const CustomAppBar(showHome: true),
-        body: FutureBuilder(
-          future: Future.wait([_crtPosition, _parkingSpots]),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return Container(
-                  color: Colors.white,
-                  child: const Center(
-                    child: SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                );
-              default:
-                if (snapshot.hasData) {
-                  if (_markers.isEmpty) {
-                    _getMarkers(snapshot.data[1]);
-                  }
-                  return MultiSplitViewTheme(
-                      data: MultiSplitViewThemeData(
-                          dividerThickness: 3,
-                          dividerPainter:
-                              DividerPainters.background(color: Colors.grey)),
-                      child: MultiSplitView(
-                          axis: Axis.vertical,
-                          // Maybe will be resizable in future
-                          resizable: false,
-                          controller: MultiSplitViewController(
-                              areas: [Area(weight: 0.8)]),
-                          children: [
-                            Scaffold(
+        body: MultiSplitViewTheme(
+            data: MultiSplitViewThemeData(
+                dividerThickness: 3,
+                dividerPainter: DividerPainters.background(color: Colors.grey)),
+            child: MultiSplitView(
+                axis: Axis.vertical,
+                // Maybe will be resizable in future
+                resizable: false,
+                controller:
+                    MultiSplitViewController(areas: [Area(weight: 0.8)]),
+                children: [
+                  FutureBuilder(
+                    future: Future.wait([_crtPosition, _parkingSpots]),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                          return Container(
+                            color: Colors.white,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 60,
+                                height: 60,
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          );
+                        default:
+                          if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else if (snapshot.hasData) {
+                            if (_markers.isEmpty) {
+                              _getMarkers(snapshot.data[1]);
+                            }
+                            return Scaffold(
                                 floatingActionButton:
                                     FloatingActionButton.extended(
                                   backgroundColor: Colors.blueGrey,
@@ -151,45 +149,23 @@ class _HomeState extends State<Home> {
                                       if (!_controller.isCompleted) {
                                         _controller.complete(controller);
                                       }
-                                    })),
-                            MultiSplitView(children: [
-                              InkWell(
-                                  enableFeedback: true,
-                                  onTap: () {},
-                                  child: Container(
-                                    child: const Icon(
-                                      Icons.local_parking,
-                                      size: 100,
-                                    ),
-                                  )),
-                              InkWell(
-                                  enableFeedback: true,
-                                  onTap: () {},
-                                  child: Container(
-                                    child: const Icon(
-                                      Icons.attach_money,
-                                      size: 100,
-                                    ),
-                                  )),
-                              InkWell(
-                                  enableFeedback: true,
-                                  onTap: () {},
-                                  child: Container(
-                                    child: const Icon(
-                                      Icons.question_answer,
-                                      size: 100,
-                                    ),
-                                  )),
-                            ])
-                          ]));
-                }
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  return Text('Unkown location error');
-                }
-            }
-          },
-        ));
+                                    }));
+                          } else {
+                            return Text("no spots found"); // placeholder
+                          }
+                      }
+                    },
+                  ),
+                  MultiSplitView(children: [
+                    HomeMenuButton(
+                        icon: Icons.money, text: "Payments", onTap: () {}),
+                    HomeMenuButton(
+                        icon: Icons.info_outline,
+                        text: "Information",
+                        onTap: () {}),
+                    HomeMenuButton(
+                        icon: Icons.question_mark, text: "FAQ", onTap: () {}),
+                  ])
+                ])));
   }
 }
