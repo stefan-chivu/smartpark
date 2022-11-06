@@ -113,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
               },
               child: Text("Already have an account?",
                   style: TextStyle(
-                      fontSize: AppFontSizes.M, color: AppColors.Yellow)),
+                      fontSize: AppFontSizes.M, color: AppColors.slateGray)),
             ),
           ),
         ]),

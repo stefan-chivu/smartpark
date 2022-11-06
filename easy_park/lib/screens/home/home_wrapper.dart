@@ -40,15 +40,15 @@ class _HomeWrapperState extends State<HomeWrapper> {
           default:
             if (snapshot.hasData) {
               if (snapshot.data != "") {
-                return Home();
+                return const Home();
               } else {
-                return LoginPage();
+                return const LoginPage();
               }
             }
             if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else {
-              return LoginPage();
+              return const LoginPage();
             }
         }
       },
