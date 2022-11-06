@@ -21,7 +21,7 @@ class SqlService {
 
   //TODO: Add more specific parameters
   // i.e. town for narrower query
-  Future<List<ParkingInfo>> getParkingSpots() async {
+  Future<List<ParkingInfo>?> getParkingSpots() async {
     List<ParkingInfo> parkingInfo = List.empty(growable: true);
     print("Attempting SQL Connection");
     try {
@@ -41,24 +41,29 @@ class SqlService {
         Address address = await getAddressById(addressId);
         Zone zone = await getZoneById(zoneId);
 
-        bool occupied = await getSensorStatus(sensorId);
+        bool occupied = await getSensorStatus(sensorId) ?? false;
 
         parkingInfo
             .add(ParkingInfo(sensorId, position, address, zone, occupied));
       }
     } catch (e) {
       print("Error");
+      return null;
     }
     return parkingInfo;
   }
 
-  Future<bool> getSensorStatus(int sensorId) async {
-    var statusQuery = await pool.execute(
-        "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC",
-        {"sensorId": sensorId});
-    ResultSetRow data = statusQuery.rows.first;
-    print("Retrieved updated sensor status");
-    return data.typedColByName<bool>("occupied")!;
+  Future<bool?> getSensorStatus(int sensorId) async {
+    try {
+      var statusQuery = await pool.execute(
+          "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC",
+          {"sensorId": sensorId});
+      ResultSetRow data = statusQuery.rows.first;
+      print("Retrieved updated sensor status");
+      return data.typedColByName<bool>("occupied")!;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<Address> getAddressById(int addressId) async {

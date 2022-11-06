@@ -1,4 +1,5 @@
 import 'package:easy_park/screens/home/home.dart';
+import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth.dart';
 import '../../ui_components/custom_textfield.dart';
@@ -25,30 +26,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if (_emailFormKey.currentState!.validate() &&
-              _passwordFormKey.currentState!.validate() &&
-              _confirmPasswordFormKey.currentState!.validate()) {
-            String result = await _auth.registerWithEmailAndPassword(
-                _emailController.text, _passwordController.text);
-            if (!result.contains("succes")) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(result)));
-            } else {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Home()));
-            }
-          }
-        },
-      ),
       body: Center(
           child: SingleChildScrollView(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Padding(
-              padding: EdgeInsets.all(AppMargins.S),
-              child: Text("Create Account")),
-          SizedBox(height: AppMargins.L),
+          Image.asset(
+            "assets/images/logo.png",
+            width: 500,
+          ),
           Padding(
             padding: EdgeInsets.all(AppMargins.S),
             child: Form(
@@ -105,6 +89,30 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
           Padding(
+            padding: EdgeInsets.all(AppMargins.M),
+            child: CustomButton(
+                text: "Create account",
+                onPressed: () async {
+                  if (_emailFormKey.currentState!.validate() &&
+                      _passwordFormKey.currentState!.validate() &&
+                      _confirmPasswordFormKey.currentState!.validate()) {
+                    String result = await _auth.registerWithEmailAndPassword(
+                        _emailController.text, _passwordController.text);
+                    if (mounted) {
+                      if (!result.contains("success")) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text(result)));
+                      } else {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Home()));
+                      }
+                    }
+                  }
+                }),
+          ),
+          Padding(
             padding: EdgeInsets.all(AppMargins.S),
             child: InkWell(
               //navigate to login
@@ -116,6 +124,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       fontSize: AppFontSizes.M, color: AppColors.slateGray)),
             ),
           ),
+          SizedBox(
+            height: AppMargins.L,
+          )
         ]),
       )),
     );
