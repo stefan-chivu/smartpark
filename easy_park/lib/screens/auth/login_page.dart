@@ -28,11 +28,10 @@ class _LoginPageState extends State<LoginPage> {
       body: Center(
           child: SingleChildScrollView(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Padding(
-            padding: EdgeInsets.all(AppMargins.S),
-            child: Text("Log-in"),
+          Image.asset(
+            "assets/images/logo.png",
+            width: 500,
           ),
-          SizedBox(height: AppMargins.L),
           Padding(
             padding: EdgeInsets.all(AppMargins.S),
             child: Form(
