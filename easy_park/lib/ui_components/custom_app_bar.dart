@@ -1,6 +1,7 @@
 import 'package:easy_park/screens/auth/login_page.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/services/auth.dart';
+import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
   const CustomAppBar({Key? key, this.showHome = true}) : super(key: key);
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -17,36 +18,26 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
       backgroundColor: AppColors.slateGray,
       toolbarHeight: 50,
       leading: showHome
-          ? IconButton(
-              icon: const Icon(
-                Icons.home,
-                size: 24,
-              ),
-              onPressed: () {
+          ? MenuButton(
+              icon: Icons.home,
+              onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => Home()),
+                  MaterialPageRoute(builder: (context) => const Home()),
                 );
               },
             )
           : Container(),
       actions: [
-        ElevatedButton.icon(
-          onPressed: (() async {
-            await AuthService().signOut();
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => LoginPage()));
-          }),
-          icon: const Icon(Icons.exit_to_app),
-          label: Text("Sign-out"),
-          style: ElevatedButton.styleFrom(
-
-              // padding: const EdgeInsets.all(12),
-              // shape: new RoundedRectangleBorder(
-              //   borderRadius: new BorderRadius.circular(20.0),
-              // ),
-              ),
-        ),
+        MenuButton(
+            icon: Icons.exit_to_app,
+            text: " Sign-out",
+            onTap: () async {
+              await AuthService().signOut();
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()));
+            }),
+        Padding(padding: EdgeInsets.all(AppMargins.XS))
       ],
     );
   }
