@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 
 class AppColors {
-  static const Color Yellow = Color(0xFFFFA90A);
-  static const DarkGray = Color(0xFF333234);
+  static const slateGray = Color(0xFF628395);
+  static const pineTree = Color(0xFF1f271b);
+  static const blueGreen = Color(0xFF7fd8be);
+  static const emerald = Color(0xFF44cf6c);
+  static const orangeYellow = Color(0xFFf4d35e);
+  static const orangeRed = Color(0xFFf25f5c);
+  static const sandyBrown = Color(0xFFee964b);
 }
 
 class AppFontSizes {

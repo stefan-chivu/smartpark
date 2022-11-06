@@ -30,7 +30,8 @@ class _CustomButtonState extends State<CustomButton> {
               elevation: 0,
               padding: EdgeInsets.all(AppMargins.S),
               minimumSize: Size(130, 45),
-              primary: widget.isPrimary ? AppColors.Yellow : AppColors.DarkGray,
+              backgroundColor:
+                  widget.isPrimary ? AppColors.blueGreen : AppColors.pineTree,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(100.0)))),
     );

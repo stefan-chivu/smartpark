@@ -79,14 +79,16 @@ class _LoginPageState extends State<LoginPage> {
                         _passwordFormKey.currentState!.validate()) {
                       String result = await _auth.signInWithEmailAndPassword(
                           _emailController.text, _passwordController.text);
-                      if (!result.contains("succes")) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text(result)));
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Home()),
-                        );
+                      if (mounted) {
+                        if (!result.contains("success")) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(result)));
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => Home()),
+                          );
+                        }
                       }
                     }
                   },
@@ -103,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
               },
               child: Text("Don't have an account? Sign-up",
                   style: TextStyle(
-                      fontSize: AppFontSizes.M, color: AppColors.Yellow)),
+                      fontSize: AppFontSizes.M, color: AppColors.slateGray)),
             ),
           ),
         ]),
