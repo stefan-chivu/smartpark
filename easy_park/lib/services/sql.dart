@@ -9,38 +9,44 @@ import 'package:mysql_client/mysql_client.dart';
 
 class SqlService {
   final pool = MySQLConnectionPool(
-    host: '35.211.208.184',
-    port: 3306,
-    userName: 'flutter',
-    password: 'P@ssw0rd!',
-    maxConnections: 10,
-    databaseName: 'easypark',
-    secure: true,
-  );
+      host: '35.211.208.184',
+      port: 3306,
+      userName: 'flutter',
+      password: 'P@ssw0rd!',
+      maxConnections: 10,
+      databaseName: 'easypark',
+      secure: true,
+      timeoutMs: 2000);
 
   //TODO: Add more specific parameters
   // i.e. town for narrower query
   Future<List<ParkingInfo>> getParkingSpots() async {
     List<ParkingInfo> parkingInfo = List.empty(growable: true);
     print("Attempting SQL Connection");
-    var result = await pool.execute("SELECT * FROM Sensors");
-    print("Fetched Sensor SQL info");
+    try {
+      var result = await pool.execute("SELECT * FROM Sensors");
 
-    for (var row in result.rows) {
-      int sensorId = row.typedColByName<int>("sensor_id")!;
-      double lat = row.typedColByName<double>("latitude")!;
-      double long = row.typedColByName<double>("longitude")!;
-      int addressId = row.typedColByName<int>("address_id")!;
-      int zoneId = row.typedColByName<int>("zone_id")!;
+      print("Fetched Sensor SQL info");
 
-      LatLng position = LatLng(lat, long);
+      for (var row in result.rows) {
+        int sensorId = row.typedColByName<int>("sensor_id")!;
+        double lat = row.typedColByName<double>("latitude")!;
+        double long = row.typedColByName<double>("longitude")!;
+        int addressId = row.typedColByName<int>("address_id")!;
+        int zoneId = row.typedColByName<int>("zone_id")!;
 
-      Address address = await getAddressById(addressId);
-      Zone zone = await getZoneById(zoneId);
+        LatLng position = LatLng(lat, long);
 
-      bool occupied = await getSensorStatus(sensorId);
+        Address address = await getAddressById(addressId);
+        Zone zone = await getZoneById(zoneId);
 
-      parkingInfo.add(ParkingInfo(sensorId, position, address, zone, occupied));
+        bool occupied = await getSensorStatus(sensorId);
+
+        parkingInfo
+            .add(ParkingInfo(sensorId, position, address, zone, occupied));
+      }
+    } catch (e) {
+      print("Error");
     }
     return parkingInfo;
   }
