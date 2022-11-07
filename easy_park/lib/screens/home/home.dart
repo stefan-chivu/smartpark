@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/screens/error.dart';
+import 'package:easy_park/screens/sensor/details.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
+import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
@@ -79,6 +81,15 @@ class _HomeState extends State<Home> {
               //popup info
               title: 'Spot #${spot.sensorId}',
               snippet: 'Price: ${spot.zone.hourRate}RON/h',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SensorDetails(
+                            spot: spot,
+                          )),
+                );
+              },
             ),
             icon: getMarkerIcon(spot.occupied)));
       }
@@ -113,157 +124,64 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(showHome: true),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueGrey,
-        onPressed: () {
-          if (_parkingSpots == null) {
-            setState(() {});
-            return;
-          }
-          _getMarkers(_parkingSpots!);
-        },
-        child: const Icon(
-          Icons.refresh,
+        appBar: const CustomAppBar(showHome: true),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.blueGrey,
+          onPressed: () {
+            if (_parkingSpots == null) {
+              setState(() {});
+              return;
+            }
+            _getMarkers(_parkingSpots!);
+          },
+          child: const Icon(
+            Icons.refresh,
+          ),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      // TODO: consider swapping to StreamBuilder
-      body: FutureBuilder(
-        future:
-            Future.wait([_getPosition(), _getParkingSpots()], eagerError: true),
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return Container(
-                color: Colors.white,
-                child: const Center(
-                  child: SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: CircularProgressIndicator(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        // TODO: consider swapping to StreamBuilder
+        body: FutureBuilder(
+          future: Future.wait([_getPosition(), _getParkingSpots()],
+              eagerError: true),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.waiting:
+                return Container(
+                  color: Colors.white,
+                  child: const Center(
+                    child: SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CircularProgressIndicator(),
+                    ),
                   ),
-                ),
-              );
-            default:
-              if (snapshot.hasError) {
-                return ErrorPage(errorMsg: 'Error: ${snapshot.error}');
-              } else if (snapshot.hasData) {
-                if (_parkingSpots == null) {
-                  return ErrorPage(errorMsg: "Error: ${snapshot.error}");
-                }
-                if (_markers.isEmpty) {
-                  _getMarkers(_parkingSpots!);
-                }
-                try {
-                  return GoogleMap(
-                    mapType: MapType.normal,
-                    initialCameraPosition: _crtPosition,
-                    myLocationEnabled: true,
-                    markers: _markers,
-                  );
-                } catch (e) {
+                );
+              default:
+                if (snapshot.hasError) {
+                  return ErrorPage(errorMsg: 'Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  if (_parkingSpots == null) {
+                    return ErrorPage(errorMsg: "Error: ${snapshot.error}");
+                  }
+                  if (_markers.isEmpty) {
+                    _getMarkers(_parkingSpots!);
+                  }
+                  try {
+                    return GoogleMap(
+                      mapType: MapType.normal,
+                      initialCameraPosition: _crtPosition,
+                      myLocationEnabled: true,
+                      markers: _markers,
+                    );
+                  } catch (e) {
+                    return const ErrorPage();
+                  }
+                } else {
                   return const ErrorPage();
                 }
-              } else {
-                return const ErrorPage();
-              }
-          }
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.slateGray,
-        showUnselectedLabels: true,
-        iconSize: AppFontSizes.XL,
-        selectedFontSize: AppFontSizes.L,
-        unselectedFontSize: AppFontSizes.L,
-        items: const [
-          BottomNavigationBarItem(
-              backgroundColor: AppColors.slateGray,
-              icon: Icon(Icons.history),
-              label: "History"),
-          BottomNavigationBarItem(
-              backgroundColor: AppColors.slateGray,
-              icon: Icon(Icons.payment),
-              label: "Pay"),
-          BottomNavigationBarItem(
-              backgroundColor: AppColors.slateGray,
-              icon: Icon(Icons.search),
-              label: "Find"),
-          BottomNavigationBarItem(
-              backgroundColor: AppColors.slateGray,
-              icon: Icon(Icons.list),
-              label: "Spots")
-        ],
-        onTap: ((index) {
-          switch (index) {
-            case 0:
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  content: const Text('Parking history'),
-                  actions: <TextButton>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Close'),
-                    )
-                  ],
-                ),
-              );
-              break;
-            case 1:
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  content: const Text('Pay for parking'),
-                  actions: <TextButton>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Close'),
-                    )
-                  ],
-                ),
-              );
-              break;
-            case 2:
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  content: const Text('Find parking spots'),
-                  actions: <TextButton>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Close'),
-                    )
-                  ],
-                ),
-              );
-              break;
-            case 3:
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  content: const Text('View parking spots'),
-                  actions: <TextButton>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Close'),
-                    )
-                  ],
-                ),
-              );
-              break;
-          }
-        }),
-      ),
-    );
+            }
+          },
+        ),
+        bottomNavigationBar: const CustomNavBar());
   }
 }

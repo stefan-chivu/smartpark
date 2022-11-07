@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
             width: 500,
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: Form(
               key: _emailFormKey,
               child: CustomTextField(
@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: Form(
               key: _passwordFormKey,
               child: CustomTextField(
@@ -71,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           Padding(
-              padding: EdgeInsets.all(AppMargins.M),
+              padding: const EdgeInsets.all(AppMargins.M),
               child: CustomButton(
                   onPressed: () async {
                     if (_emailFormKey.currentState!.validate() &&
@@ -85,7 +85,8 @@ class _LoginPageState extends State<LoginPage> {
                         } else {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => Home()),
+                            MaterialPageRoute(
+                                builder: (context) => const Home()),
                           );
                         }
                       }
@@ -93,16 +94,16 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   text: "Sign-in")),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: InkWell(
               //navigate to register
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegisterPage()),
+                  MaterialPageRoute(builder: (context) => const RegisterPage()),
                 );
               },
-              child: Text("Don't have an account? Sign-up",
+              child: const Text("Don't have an account? Sign-up",
                   style: TextStyle(
                       fontSize: AppFontSizes.M, color: AppColors.slateGray)),
             ),

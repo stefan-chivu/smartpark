@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'EasyPark',
       theme: ThemeData(
+        fontFamily: 'OpenSans',
         colorScheme: ColorScheme.fromSwatch().copyWith(
             primary: AppColors.pineTree,
             secondary: AppColors.blueGreen,
