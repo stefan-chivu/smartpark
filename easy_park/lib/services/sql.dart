@@ -47,7 +47,6 @@ class SqlService {
             .add(ParkingInfo(sensorId, position, address, zone, occupied));
       }
     } catch (e) {
-      print("Error");
       return null;
     }
     return parkingInfo;

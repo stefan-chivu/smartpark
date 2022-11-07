@@ -16,21 +16,24 @@ class MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-        enableFeedback: true,
-        onTap: onTap,
-        child: horizontal
-            ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(
-                  icon,
-                ),
-                Text(text)
-              ])
-            : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(
-                  icon,
-                ),
-                Text(text),
-              ]));
+    return Center(
+        child: InkWell(
+            enableFeedback: true,
+            onTap: onTap,
+            child: horizontal
+                ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(
+                      icon,
+                    ),
+                    Center(child: Text(text))
+                  ])
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        Icon(
+                          icon,
+                        ),
+                        Center(child: Text(text)),
+                      ])));
   }
 }
