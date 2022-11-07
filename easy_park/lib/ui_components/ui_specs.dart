@@ -11,16 +11,16 @@ class AppColors {
 }
 
 class AppFontSizes {
-  static double S = 14;
-  static double M = 16;
-  static double L = 18;
-  static double XL = 22;
-  static double XXL = 40;
+  static const double S = 14;
+  static const double M = 16;
+  static const double L = 18;
+  static const double XL = 22;
+  static const double XXL = 40;
 }
 
 class AppMargins {
-  static double XS = 5;
-  static double S = 12;
-  static double M = 20;
-  static double L = 50;
+  static const double XS = 5;
+  static const double S = 12;
+  static const double M = 20;
+  static const double L = 50;
 }

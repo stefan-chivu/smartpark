@@ -5,10 +5,12 @@ import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
+import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:mysql_client/exception.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -41,7 +43,11 @@ class _HomeState extends State<Home> {
     LocationData data = await LocationService().getCurrentLocation();
 
     if (data.latitude == null || data.longitude == null) {
-      return Future.error('Error fetching location data');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Failed fetching location data"),
+        backgroundColor: AppColors.orangeRed,
+      ));
+      return Future.error('Fetching location data failed');
     }
 
     _crtPosition = CameraPosition(
@@ -53,9 +59,10 @@ class _HomeState extends State<Home> {
 
     if (_parkingSpots == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Failed fetching current parking spot information"),
+        content: Text("Failed fetching parking spot information"),
         backgroundColor: AppColors.orangeRed,
       ));
+      return Future.error("Fetching sensor information failed");
     }
   }
 
@@ -64,7 +71,7 @@ class _HomeState extends State<Home> {
       return;
     }
     if (_markers.isEmpty) {
-      for (ParkingInfo spot in spots!) {
+      for (ParkingInfo spot in spots) {
         _markers.add(Marker(
             markerId: MarkerId(spot.sensorId.toString()),
             position: spot.position, //position of marker
@@ -84,6 +91,7 @@ class _HomeState extends State<Home> {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text("Failed updating sensor status"),
               backgroundColor: AppColors.orangeRed));
+          return Future.error("Updating sensor information failed");
         }
         newMarkers.add(m.copyWith(iconParam: getMarkerIcon(occupied ?? false)));
       }
@@ -110,7 +118,6 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.blueGrey,
         onPressed: () {
           if (_parkingSpots == null) {
-            print("Refreshing all page");
             setState(() {});
             return;
           }
@@ -121,8 +128,10 @@ class _HomeState extends State<Home> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      // TODO: consider swapping to StreamBuilder
       body: FutureBuilder(
-        future: Future.wait([_getPosition(), _getParkingSpots()]),
+        future:
+            Future.wait([_getPosition(), _getParkingSpots()], eagerError: true),
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
@@ -138,12 +147,12 @@ class _HomeState extends State<Home> {
               );
             default:
               if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
+                return ErrorPage(errorMsg: 'Error: ${snapshot.error}');
               } else if (snapshot.hasData) {
+                if (_parkingSpots == null) {
+                  return ErrorPage(errorMsg: "Error: ${snapshot.error}");
+                }
                 if (_markers.isEmpty) {
-                  if (_parkingSpots == null) {
-                    return const ErrorPage();
-                  }
                   _getMarkers(_parkingSpots!);
                 }
                 try {
@@ -154,7 +163,7 @@ class _HomeState extends State<Home> {
                     markers: _markers,
                   );
                 } catch (e) {
-                  return Text(e.toString());
+                  return const ErrorPage();
                 }
               } else {
                 return const ErrorPage();
@@ -162,10 +171,99 @@ class _HomeState extends State<Home> {
           }
         },
       ),
-      bottomNavigationBar: BottomAppBar(
-          child: Row(
-        children: [IconButton(onPressed: (() {}), icon: Icon(Icons.menu))],
-      )),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: AppColors.slateGray,
+        showUnselectedLabels: true,
+        iconSize: AppFontSizes.XL,
+        selectedFontSize: AppFontSizes.L,
+        unselectedFontSize: AppFontSizes.L,
+        items: const [
+          BottomNavigationBarItem(
+              backgroundColor: AppColors.slateGray,
+              icon: Icon(Icons.history),
+              label: "History"),
+          BottomNavigationBarItem(
+              backgroundColor: AppColors.slateGray,
+              icon: Icon(Icons.payment),
+              label: "Pay"),
+          BottomNavigationBarItem(
+              backgroundColor: AppColors.slateGray,
+              icon: Icon(Icons.search),
+              label: "Find"),
+          BottomNavigationBarItem(
+              backgroundColor: AppColors.slateGray,
+              icon: Icon(Icons.list),
+              label: "Spots")
+        ],
+        onTap: ((index) {
+          switch (index) {
+            case 0:
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  content: const Text('Parking history'),
+                  actions: <TextButton>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    )
+                  ],
+                ),
+              );
+              break;
+            case 1:
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  content: const Text('Pay for parking'),
+                  actions: <TextButton>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    )
+                  ],
+                ),
+              );
+              break;
+            case 2:
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  content: const Text('Find parking spots'),
+                  actions: <TextButton>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    )
+                  ],
+                ),
+              );
+              break;
+            case 3:
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  content: const Text('View parking spots'),
+                  actions: <TextButton>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    )
+                  ],
+                ),
+              );
+              break;
+          }
+        }),
+      ),
     );
   }
 }

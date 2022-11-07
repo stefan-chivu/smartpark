@@ -9,7 +9,7 @@ import 'package:mysql_client/mysql_client.dart';
 
 class SqlService {
   final pool = MySQLConnectionPool(
-      host: '35.211.208.184',
+      host: '35.211.222.72',
       port: 3306,
       userName: 'flutter',
       password: 'P@ssw0rd!',
@@ -46,7 +46,6 @@ class SqlService {
             .add(ParkingInfo(sensorId, position, address, zone, occupied));
       }
     } catch (e) {
-      print("Error");
       return null;
     }
     return parkingInfo;
