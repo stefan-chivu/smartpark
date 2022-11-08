@@ -82,13 +82,11 @@ class _HomeState extends State<Home> {
               title: 'Spot #${spot.sensorId}',
               snippet: 'Price: ${spot.zone.hourRate}RON/h',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => SensorDetails(
-                            spot: spot,
-                          )),
-                );
+                showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return Wrap(children: [SpotDetails(spot: spot)]);
+                    });
               },
             ),
             icon: getMarkerIcon(spot.occupied)));

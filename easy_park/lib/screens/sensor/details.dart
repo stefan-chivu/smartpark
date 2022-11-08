@@ -4,43 +4,43 @@ import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 
-class SensorDetails extends StatefulWidget {
+class SpotDetails extends StatelessWidget {
   final ParkingInfo spot;
-  const SensorDetails({super.key, required this.spot});
 
-  @override
-  State<SensorDetails> createState() => _SensorDetailsState();
-}
+  const SpotDetails({super.key, required this.spot});
 
-class _SensorDetailsState extends State<SensorDetails> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: const CustomAppBar(showHome: true),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.blueGrey,
-          onPressed: () {},
-          child: const Icon(
-            Icons.refresh,
-          ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Padding(padding: EdgeInsets.all(AppMargins.XS)),
+        Text(
+          spot.address.toString(),
+          style: const TextStyle(fontSize: AppFontSizes.XL),
         ),
-        body: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Center(
-            child: Image.asset(
-              "assets/images/roadmap.png",
-              width: 250,
-            ),
-          ),
-          Text(
-            "Spot no. ${widget.spot.sensorId}",
-            style: TextStyle(fontSize: AppFontSizes.XL),
-          ),
-          ListTile(
-            title: const Text("State"),
-            subtitle: Text(widget.spot.occupied ? "Occupied" : "Free"),
-          )
-        ]),
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-        bottomNavigationBar: const CustomNavBar());
+        ListTile(
+          leading: Icon(Icons.circle_rounded,
+              color: spot.occupied ? Colors.red : Colors.green),
+          title: const Text("State"),
+          subtitle: Text(spot.occupied ? "Occupied" : "Free"),
+        ),
+        // TODO: Add optional zone name & info
+        ListTile(
+          leading: const Icon(Icons.access_time),
+          title: const Text("Timetable"),
+          subtitle: Text(spot.zone.schedule.toString()),
+        ),
+        ListTile(
+          leading: const Icon(Icons.attach_money),
+          title: const Text("Price"),
+          subtitle: (spot.zone.dayRate == null)
+              ? Text("${spot.zone.hourRate}${spot.zone.currency}/h")
+              : Text("${spot.zone.hourRate}${spot.zone.currency}/h\n"
+                  "${spot.zone.dayRate}${spot.zone.currency}/day"),
+        ),
+        const Padding(padding: EdgeInsets.all(AppMargins.XS)),
+      ],
+    );
   }
 }

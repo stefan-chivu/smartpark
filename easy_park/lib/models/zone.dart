@@ -4,6 +4,7 @@ class Zone {
   String name;
   double hourRate;
   double? dayRate;
+  String currency = "RON"; // TODO Add DB currency field
   bool isPrivate = false;
   int? totalSpots;
   Schedule schedule;
