@@ -64,7 +64,6 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         manifestPlaceholders += [googleMapsApiKey: googleMapsApiKey]
-        logger.error(googleMapsApiKey)
     }
 
     buildTypes {

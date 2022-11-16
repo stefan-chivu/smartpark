@@ -1,6 +1,7 @@
 import 'package:easy_park/models/schedule.dart';
 
 class Zone {
+  int id;
   String name;
   double hourRate;
   double? dayRate;
@@ -9,6 +10,6 @@ class Zone {
   int? totalSpots;
   Schedule schedule;
 
-  Zone(this.name, this.hourRate, this.dayRate, this.isPrivate, this.totalSpots,
-      this.schedule);
+  Zone(this.id, this.name, this.hourRate, this.dayRate, this.isPrivate,
+      this.totalSpots, this.schedule);
 }

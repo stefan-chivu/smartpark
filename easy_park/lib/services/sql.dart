@@ -17,7 +17,7 @@ class SqlService {
       maxConnections: 10,
       databaseName: 'easypark',
       secure: true,
-      timeoutMs: 2000);
+      timeoutMs: 10000);
 
   //TODO: Add more specific parameters
   // i.e. town for narrower query
@@ -85,6 +85,7 @@ class SqlService {
         "SELECT * FROM Zones WHERE zone_id = :zoneId", {"zoneId": zoneId});
     ResultSetRow data = zoneQuery.rows.first;
 
+    int id = data.typedColByName<int>("zone_id")!;
     String name = data.typedColByName<String>("zone_name")!;
     double hourRate = data.typedColByName<double>("hour_rate")!;
     double? dayRate = data.typedColByName<double>("day_rate");
@@ -105,7 +106,7 @@ class SqlService {
 
     Schedule schedule = await buildSchedule(dayIds);
 
-    return Zone(name, hourRate, dayRate, isPrivate, totalSpots, schedule);
+    return Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule);
   }
 
   Future<Schedule> buildSchedule(List<int?> ids) async {
@@ -135,5 +136,124 @@ class SqlService {
     return TimeOfDay(
         hour: int.parse(time.split(":")[0]),
         minute: int.parse(time.split(":")[1]));
+  }
+
+  Future<List<Zone>?> getZones() async {
+    List<Zone> zones = List.empty(growable: true);
+
+    try {
+      var zonesQuery = await pool.execute("SELECT * FROM Zones");
+      for (var row in zonesQuery.rows) {
+        int id = row.typedColByName<int>("zone_id")!;
+        String name = row.typedColByName<String>("zone_name")!;
+        double hourRate = row.typedColByName<double>("hour_rate")!;
+        double? dayRate = row.typedColByName<double>("day_rate");
+        bool isPrivate = row.typedColByName<bool>("is_private")!;
+        int? totalSpots = row.typedColByName<int>("total_spots");
+
+        List<int?> dayIds = []..length = DateTime.daysPerWeek + 1;
+        dayIds[DateTime.monday - 1] =
+            row.typedColByName<int>("mon_schedule_id")!;
+        dayIds[DateTime.tuesday - 1] =
+            row.typedColByName<int>("tue_schedule_id")!;
+        dayIds[DateTime.wednesday - 1] =
+            row.typedColByName<int>("wed_schedule_id")!;
+        dayIds[DateTime.thursday - 1] =
+            row.typedColByName<int>("thu_schedule_id")!;
+        dayIds[DateTime.friday - 1] =
+            row.typedColByName<int>("fri_schedule_id")!;
+        dayIds[DateTime.saturday - 1] =
+            row.typedColByName<int>("sat_schedule_id")!;
+        dayIds[DateTime.sunday - 1] =
+            row.typedColByName<int>("sun_schedule_id")!;
+
+        Schedule schedule = await buildSchedule(dayIds);
+
+        zones.add(
+            Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule));
+      }
+    } catch (e) {
+      print(e.toString());
+      if (!e.toString().contains("errno = 103")) {
+        return null;
+      }
+    }
+
+    return zones;
+  }
+
+  Future<String> addSensor(
+      String sensorId, LatLng latLng, Address address, int zoneId) async {
+    int addressId = await findOrCreateAddress(address);
+
+    if (addressId == -1) {
+      return "Failed to obtain address";
+    }
+
+    try {
+      print('Address id: $addressId');
+      var res = await pool.execute(
+        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `address_id`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :address_id, :zone_id)",
+        {
+          "sensor_id": int.parse(sensorId),
+          "latitude": latLng.latitude,
+          "longitude": latLng.longitude,
+          "address_id": addressId,
+          "zone_id": zoneId,
+        },
+      );
+
+      print(res.affectedRows);
+    } catch (e) {
+      return e.toString();
+    }
+    return "Sensor added successfully";
+  }
+
+  Future<int> findOrCreateAddress(Address address) async {
+    int id = -1;
+    try {
+      var result = await pool.execute(
+          "SELECT address_id FROM Addresses WHERE street = :street AND city = :city AND region = :region AND country = :country",
+          {
+            "street": address.street,
+            "city": address.city,
+            "region": address.region,
+            "country": address.country,
+          });
+      ResultSetRow data = result.rows.first;
+      id = data.typedColByName<int>("address_id")!;
+      return id;
+    } catch (e) {
+      if (!e.toString().contains('Bad state: No element')) {
+        return -1;
+      }
+      try {
+        var result = await pool.execute(
+            "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
+            {
+              "street": address.street ?? "",
+              "city": address.city ?? "",
+              "region": address.region ?? "",
+              "country": address.country ?? "",
+            });
+
+        result = await pool.execute(
+            "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
+            {
+              "street": address.street,
+              "city": address.city,
+              "region": address.region,
+              "country": address.country,
+            });
+        ResultSetRow data = result.rows.first;
+        id = data.typedColByName<int>("address_id")!;
+      } catch (e) {
+        print("ERROR: " + e.toString());
+        id = -1;
+      }
+
+      return id;
+    }
   }
 }
