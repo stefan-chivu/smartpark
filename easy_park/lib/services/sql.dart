@@ -61,6 +61,7 @@ class SqlService {
       print("Retrieved updated sensor status");
       return data.typedColByName<bool>("occupied")!;
     } catch (e) {
+      print(e.toString());
       return null;
     }
   }
@@ -91,13 +92,16 @@ class SqlService {
     int? totalSpots = data.typedColByName<int>("total_spots");
 
     List<int?> dayIds = []..length = DateTime.daysPerWeek + 1;
-    dayIds[DateTime.monday] = data.typedColByName<int>("mon_schedule_id")!;
-    dayIds[DateTime.tuesday] = data.typedColByName<int>("tue_schedule_id")!;
-    dayIds[DateTime.wednesday] = data.typedColByName<int>("wed_schedule_id")!;
-    dayIds[DateTime.thursday] = data.typedColByName<int>("thu_schedule_id")!;
-    dayIds[DateTime.friday] = data.typedColByName<int>("fri_schedule_id")!;
-    dayIds[DateTime.saturday] = data.typedColByName<int>("sat_schedule_id")!;
-    dayIds[DateTime.sunday] = data.typedColByName<int>("sun_schedule_id")!;
+    dayIds[DateTime.monday - 1] = data.typedColByName<int>("mon_schedule_id")!;
+    dayIds[DateTime.tuesday - 1] = data.typedColByName<int>("tue_schedule_id")!;
+    dayIds[DateTime.wednesday - 1] =
+        data.typedColByName<int>("wed_schedule_id")!;
+    dayIds[DateTime.thursday - 1] =
+        data.typedColByName<int>("thu_schedule_id")!;
+    dayIds[DateTime.friday - 1] = data.typedColByName<int>("fri_schedule_id")!;
+    dayIds[DateTime.saturday - 1] =
+        data.typedColByName<int>("sat_schedule_id")!;
+    dayIds[DateTime.sunday - 1] = data.typedColByName<int>("sun_schedule_id")!;
 
     Schedule schedule = await buildSchedule(dayIds);
 
@@ -107,8 +111,8 @@ class SqlService {
   Future<Schedule> buildSchedule(List<int?> ids) async {
     Map<int?, DaySchedule> daySchedules = {};
     List<DaySchedule?> result =
-        List.filled(DateTime.daysPerWeek + 1, DaySchedule.empty());
-    for (int i = DateTime.monday; i <= DateTime.sunday; i++) {
+        List.filled(DateTime.daysPerWeek, DaySchedule.empty());
+    for (int i = 0; i < DateTime.sunday; i++) {
       if (daySchedules.containsKey(ids[i])) {
         result[i] = daySchedules[ids[i]]!;
       } else {

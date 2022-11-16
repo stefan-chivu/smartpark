@@ -5,4 +5,9 @@ class Address {
   String country;
 
   Address(this.street, this.city, this.region, this.country);
+
+  @override
+  String toString() {
+    return "$street, $city";
+  }
 }
