@@ -97,10 +97,10 @@ class _HomeState extends State<Home> {
         bool? occupied =
             await sqlService.getSensorStatus(int.parse(m.markerId.value));
         if (occupied == null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Failed updating sensor status"),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content:
+                  Text("Failed updating sensor ${m.markerId.value} status"),
               backgroundColor: AppColors.orangeRed));
-          return Future.error("Updating sensor information failed");
         }
         newMarkers.add(m.copyWith(iconParam: getMarkerIcon(occupied ?? false)));
       }

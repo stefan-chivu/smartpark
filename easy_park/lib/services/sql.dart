@@ -61,6 +61,7 @@ class SqlService {
       print("Retrieved updated sensor status");
       return data.typedColByName<bool>("occupied")!;
     } catch (e) {
+      print(e.toString());
       return null;
     }
   }
