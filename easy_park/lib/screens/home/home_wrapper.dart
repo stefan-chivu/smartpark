@@ -1,4 +1,6 @@
 import 'package:easy_park/screens/auth/login_page.dart';
+import 'package:easy_park/screens/home/web_home.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
@@ -40,6 +42,9 @@ class _HomeWrapperState extends State<HomeWrapper> {
           default:
             if (snapshot.hasData) {
               if (snapshot.data != "") {
+                if (kIsWeb) {
+                  return const WebHome();
+                }
                 return const Home();
               } else {
                 return const LoginPage();
