@@ -1,11 +1,25 @@
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:easy_park/screens/home/home_wrapper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_park/services/constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+        options: const FirebaseOptions(
+            apiKey: Constants.firebaseWebApiKey,
+            authDomain: Constants.firebaseWebAuthDomain,
+            projectId: Constants.firebaseWebProjectId,
+            storageBucket: Constants.firebaseWebStorageBucket,
+            messagingSenderId: Constants.firebaseWebMessagingSenderId,
+            appId: Constants.firebaseWebAppId,
+            measurementId: Constants.firebaseWebMeasurementId));
+  } else {
+    await Firebase.initializeApp();
+  }
   runApp(const MyApp());
 }
 
