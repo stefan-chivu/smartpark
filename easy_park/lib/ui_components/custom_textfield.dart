@@ -11,6 +11,7 @@ class CustomTextField extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
   final String? initialValue;
+  final bool? enabled;
   const CustomTextField(
       {Key? key,
       required this.label,
@@ -21,7 +22,8 @@ class CustomTextField extends StatefulWidget {
       this.controller,
       this.inputFormatters,
       this.keyboardType,
-      this.initialValue})
+      this.initialValue,
+      this.enabled})
       : super(key: key);
 
   @override
@@ -34,22 +36,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Container(
       width: 350,
       child: TextFormField(
-        decoration: InputDecoration(
-          suffixIcon: Icon(
-            widget.icon,
-            size: 24,
+          decoration: InputDecoration(
+            suffixIcon: Icon(
+              widget.icon,
+              size: 24,
+            ),
+            labelText: widget.label,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          labelText: widget.label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        obscureText: widget.isPassword,
-        onChanged: widget.onChanged,
-        validator: widget.validator,
-        inputFormatters: widget.inputFormatters,
-        keyboardType: widget.keyboardType,
-        controller: widget.controller,
-        initialValue: widget.initialValue,
-      ),
+          obscureText: widget.isPassword,
+          onChanged: widget.onChanged,
+          validator: widget.validator,
+          inputFormatters: widget.inputFormatters,
+          keyboardType: widget.keyboardType,
+          controller: widget.controller,
+          initialValue: widget.initialValue,
+          enabled: widget.enabled),
     );
   }
 }
