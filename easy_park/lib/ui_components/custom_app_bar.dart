@@ -1,4 +1,3 @@
-import 'package:easy_park/screens/auth/login_page.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/screens/home/web_home.dart';
 import 'package:easy_park/screens/sensor/add_sensor.dart';
@@ -54,8 +53,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
             text: " Sign-out",
             onTap: () async {
               await AuthService().signOut();
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()));
+              Navigator.pushNamed(context, '/');
             }),
         const Padding(padding: EdgeInsets.all(AppMargins.XS))
       ],

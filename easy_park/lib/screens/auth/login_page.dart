@@ -1,6 +1,3 @@
-import 'package:easy_park/screens/auth/register_page.dart';
-import 'package:easy_park/screens/home/home.dart';
-import 'package:easy_park/screens/home/home_wrapper.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:flutter/material.dart';
@@ -84,11 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                           ScaffoldMessenger.of(context)
                               .showSnackBar(SnackBar(content: Text(result)));
                         } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomeWrapper()),
-                          );
+                          Navigator.pushNamed(context, '/');
                         }
                       }
                     }
@@ -99,10 +92,7 @@ class _LoginPageState extends State<LoginPage> {
             child: InkWell(
               //navigate to register
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RegisterPage()),
-                );
+                Navigator.pushNamed(context, '/register');
               },
               child: const Text("Don't have an account? Sign-up",
                   style: TextStyle(

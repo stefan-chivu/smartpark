@@ -1,6 +1,4 @@
 import 'package:easy_park/models/parking_info.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
-import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 

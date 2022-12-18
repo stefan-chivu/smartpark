@@ -1,3 +1,7 @@
+import 'package:easy_park/screens/auth/login_page.dart';
+import 'package:easy_park/screens/auth/register_page.dart';
+import 'package:easy_park/screens/error.dart';
+import 'package:easy_park/screens/sensor/add_sensor.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:easy_park/screens/home/home_wrapper.dart';
@@ -39,7 +43,13 @@ class MyApp extends StatelessWidget {
             outline: AppColors.slateGray,
             error: AppColors.orangeRed),
       ),
-      home: HomeWrapper(),
+      routes: {
+        '/': (context) => HomeWrapper(),
+        '/error': (context) => const ErrorPage(),
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+        '/add-sensor': (context) => const AddSensor(),
+      },
     );
   }
 }
