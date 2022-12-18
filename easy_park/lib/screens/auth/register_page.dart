@@ -34,7 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
             width: 500,
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: Form(
               key: _emailFormKey,
               child: CustomTextField(
@@ -55,7 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: Form(
               key: _passwordFormKey,
               child: CustomTextField(
@@ -72,7 +72,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: Form(
               key: _confirmPasswordFormKey,
               child: CustomTextField(
@@ -89,7 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.M),
+            padding: const EdgeInsets.all(AppMargins.M),
             child: CustomButton(
                 text: "Create account",
                 onPressed: () async {
@@ -103,28 +103,25 @@ class _RegisterPageState extends State<RegisterPage> {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(SnackBar(content: Text(result)));
                       } else {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Home()));
+                        Navigator.pushNamed(context, '/');
                       }
                     }
                   }
                 }),
           ),
           Padding(
-            padding: EdgeInsets.all(AppMargins.S),
+            padding: const EdgeInsets.all(AppMargins.S),
             child: InkWell(
               //navigate to login
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pushNamed(context, '/login');
               },
-              child: Text("Already have an account?",
+              child: const Text("Already have an account?",
                   style: TextStyle(
                       fontSize: AppFontSizes.M, color: AppColors.slateGray)),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: AppMargins.L,
           )
         ]),

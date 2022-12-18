@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/zone.dart';
-import 'package:easy_park/screens/home/home.dart';
+import 'package:easy_park/screens/unsupported.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -35,14 +36,18 @@ class _AddSensorState extends State<AddSensor> {
   @override
   void initState() {
     super.initState();
-    _positionFuture = _getLatLng();
-    _dropdownFuture = _getZones();
+    if (!kIsWeb) {
+      _positionFuture = _getLatLng();
+      _dropdownFuture = _getZones();
+    }
   }
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    _positionFuture = _getLatLng();
+    if (!kIsWeb) {
+      _positionFuture = _getLatLng();
+    }
   }
 
   Future<LocationInfo> _getLatLng() async {
@@ -109,6 +114,9 @@ class _AddSensorState extends State<AddSensor> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return const UnsupportedPlatform();
+    }
     return Scaffold(
         appBar: const CustomAppBar(showHome: true),
         floatingActionButton: FloatingActionButton(
@@ -267,8 +275,8 @@ class _AddSensorState extends State<AddSensor> {
               child: CustomButton(
                   onPressed: () async {
                     if (_zoneID == null && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Please select a zone")));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Please select a zone")));
                       return;
                     }
                     if (_sensorIdFormKey.currentState!.validate()) {
@@ -284,11 +292,8 @@ class _AddSensorState extends State<AddSensor> {
                         } else {
                           ScaffoldMessenger.of(context)
                               .showSnackBar(SnackBar(content: Text(result)));
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Home()),
-                          );
+
+                          Navigator.pushNamed(context, '/');
                         }
                       }
                     }
