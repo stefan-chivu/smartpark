@@ -2,6 +2,7 @@ import 'package:easy_park/screens/auth/login_page.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/screens/sensor/add_sensor.dart';
 import 'package:easy_park/services/auth.dart';
+import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
@@ -30,14 +31,18 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
             )
           : Container(),
       actions: [
-        MenuButton(
-            icon: Icons.add_location_alt_outlined,
-            text: "Add sensor",
-            onTap: () async {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const AddSensor()));
-            }),
-        Padding(padding: EdgeInsets.all(AppMargins.XS)),
+        IsarService.getAdminStatus()
+            ? MenuButton(
+                icon: Icons.add_location_alt_outlined,
+                text: "Add sensor",
+                onTap: () async {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AddSensor()));
+                })
+            : Container(),
+        const Padding(padding: EdgeInsets.all(AppMargins.XS)),
         MenuButton(
             icon: Icons.exit_to_app,
             text: " Sign-out",
@@ -46,7 +51,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => const LoginPage()));
             }),
-        Padding(padding: EdgeInsets.all(AppMargins.XS))
+        const Padding(padding: EdgeInsets.all(AppMargins.XS))
       ],
     );
   }
