@@ -1,7 +1,5 @@
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class ErrorPage extends StatelessWidget {
   final String? errorMsg;
@@ -11,7 +9,7 @@ class ErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
         child: Column(children: [
-      SizedBox(
+      const SizedBox(
         height: AppMargins.L,
       ),
       Image.asset(

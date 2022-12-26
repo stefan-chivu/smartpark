@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
 import 'package:easy_park/models/address.dart';
@@ -23,7 +25,7 @@ class SqlService {
 
   //TODO: Add more specific parameters
   // i.e. town for narrower query
-  Future<List<ParkingInfo>?> getParkingSpots() async {
+  Future<List<ParkingInfo>> getParkingSpots() async {
     List<ParkingInfo> parkingInfo = List.empty(growable: true);
     print("Attempting SQL Connection");
     try {
@@ -49,7 +51,7 @@ class SqlService {
             .add(ParkingInfo(sensorId, position, address, zone, occupied));
       }
     } catch (e) {
-      return null;
+      return [];
     }
     return parkingInfo;
   }
@@ -254,7 +256,7 @@ class SqlService {
         ResultSetRow data = result.rows.first;
         id = data.typedColByName<int>("address_id")!;
       } catch (e) {
-        print("Failed inserting new addrress: " + e.toString());
+        print("Failed inserting new addrress: ${e.toString()}");
         id = -1;
       }
 

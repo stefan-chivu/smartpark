@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'home.dart';
 
 class HomeWrapper extends StatefulWidget {
+  const HomeWrapper({super.key});
+
   @override
   State<HomeWrapper> createState() => _HomeWrapperState();
 }

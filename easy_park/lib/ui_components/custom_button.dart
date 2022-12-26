@@ -23,15 +23,15 @@ class _CustomButtonState extends State<CustomButton> {
         onPressed: widget.onPressed,
         style: ElevatedButton.styleFrom(
             elevation: 0,
-            padding: EdgeInsets.all(AppMargins.S),
-            minimumSize: Size(130, 45),
+            padding: const EdgeInsets.all(AppMargins.S),
+            minimumSize: const Size(130, 45),
             backgroundColor:
                 widget.isPrimary ? AppColors.blueGreen : AppColors.pineTree,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(100.0))),
         child: Text(
           widget.text,
-          style: TextStyle(fontSize: AppFontSizes.M),
+          style: const TextStyle(fontSize: AppFontSizes.M),
         ));
   }
 }

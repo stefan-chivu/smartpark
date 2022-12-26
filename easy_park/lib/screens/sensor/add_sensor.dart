@@ -66,9 +66,9 @@ class _AddSensorState extends State<AddSensor> {
   }
 
   Future<List<DropdownMenuItem<int>>> getZones() async {
-    List<Zone>? _zones = await sqlService.getZones();
+    List<Zone>? zones = await sqlService.getZones();
     List<DropdownMenuItem<int>>? dropdownOptions = List.empty(growable: true);
-    if (_zones == null && mounted) {
+    if (zones == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
           "No zones were fetched from the database",
@@ -79,7 +79,7 @@ class _AddSensorState extends State<AddSensor> {
       return Future.error("Fetching zone information failed");
     }
 
-    for (Zone zone in _zones!) {
+    for (Zone zone in zones!) {
       dropdownOptions.add(DropdownMenuItem(
         value: zone.id,
         child: Text(
@@ -254,8 +254,8 @@ class _AddSensorState extends State<AddSensor> {
               child: CustomButton(
                   onPressed: () async {
                     if (_zoneID == null && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Please select a zone")));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Please select a zone")));
                       return;
                     }
                     if (_sensorIdFormKey.currentState!.validate()) {

@@ -1,7 +1,5 @@
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class CustomNavBar extends StatelessWidget {
   const CustomNavBar({super.key});

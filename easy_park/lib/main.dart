@@ -1,6 +1,5 @@
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:easy_park/screens/home/home_wrapper.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +28,7 @@ class MyApp extends StatelessWidget {
             outline: AppColors.slateGray,
             error: AppColors.orangeRed),
       ),
-      home: HomeWrapper(),
+      home: const HomeWrapper(),
     );
   }
 }

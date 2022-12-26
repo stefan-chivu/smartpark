@@ -46,7 +46,6 @@ class Schedule {
   @override
   String toString() {
     String result = "";
-    DaySchedule? prev;
 
     result += weekDaysShort[0];
     int streakLen = 0;
