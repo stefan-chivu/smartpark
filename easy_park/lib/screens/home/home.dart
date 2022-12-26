@@ -7,12 +7,10 @@ import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
-import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'package:mysql_client/exception.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -25,7 +23,7 @@ typedef MarkerUpdateAction = Marker Function(Marker marker);
 
 class _HomeState extends State<Home> {
   late CameraPosition _crtPosition;
-  late List<ParkingInfo>? _parkingSpots = null;
+  List<ParkingInfo> _parkingSpots = [];
   final Set<Marker> _markers = {};
   SqlService sqlService = SqlService();
 
@@ -44,7 +42,7 @@ class _HomeState extends State<Home> {
   Future<void> _getPosition() async {
     LocationData data = await LocationService().getCurrentLocation();
 
-    if (data.latitude == null || data.longitude == null) {
+    if ((data.latitude == null || data.longitude == null) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Failed fetching location data"),
         backgroundColor: AppColors.orangeRed,
@@ -57,9 +55,9 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _getParkingSpots() async {
-    _parkingSpots ??= await sqlService.getParkingSpots();
+    _parkingSpots = await sqlService.getParkingSpots();
 
-    if (_parkingSpots == null && mounted) {
+    if (_parkingSpots.isEmpty && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Failed fetching parking spot information"),
         backgroundColor: AppColors.orangeRed,
@@ -76,7 +74,8 @@ class _HomeState extends State<Home> {
       for (ParkingInfo spot in spots) {
         _markers.add(Marker(
             markerId: MarkerId(spot.sensorId.toString()),
-            position: spot.position, //position of marker
+            position:
+                LatLng(spot.latitude, spot.longitude), //position of marker
             infoWindow: InfoWindow(
               //popup info
               title: 'Spot #${spot.sensorId}',
@@ -126,18 +125,17 @@ class _HomeState extends State<Home> {
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.blueGrey,
           onPressed: () {
-            if (_parkingSpots == null) {
+            if (_parkingSpots.isEmpty) {
               setState(() {});
               return;
             }
-            _getMarkers(_parkingSpots!);
+            _getMarkers(_parkingSpots);
           },
           child: const Icon(
             Icons.refresh,
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-        // TODO: consider swapping to StreamBuilder
         body: FutureBuilder(
           future: Future.wait([_getPosition(), _getParkingSpots()],
               eagerError: true),
@@ -158,11 +156,11 @@ class _HomeState extends State<Home> {
                 if (snapshot.hasError) {
                   return ErrorPage(errorMsg: 'Error: ${snapshot.error}');
                 } else if (snapshot.hasData) {
-                  if (_parkingSpots == null) {
+                  if (_parkingSpots.isEmpty) {
                     return ErrorPage(errorMsg: "Error: ${snapshot.error}");
                   }
                   if (_markers.isEmpty) {
-                    _getMarkers(_parkingSpots!);
+                    _getMarkers(_parkingSpots);
                   }
                   try {
                     return GoogleMap(

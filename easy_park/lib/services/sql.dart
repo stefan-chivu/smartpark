@@ -1,3 +1,7 @@
+// ignore_for_file: avoid_print
+
+import 'dart:io';
+
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
 import 'package:easy_park/models/parking_info.dart';
@@ -21,9 +25,8 @@ class SqlService {
 
   //TODO: Add more specific parameters
   // i.e. town for narrower query
-  Future<List<ParkingInfo>?> getParkingSpots() async {
+  Future<List<ParkingInfo>> getParkingSpots() async {
     List<ParkingInfo> parkingInfo = List.empty(growable: true);
-    print("Attempting SQL Connection");
     try {
       var result = await pool.execute("SELECT * FROM Sensors");
 
@@ -43,11 +46,11 @@ class SqlService {
 
         bool occupied = await getSensorStatus(sensorId) ?? false;
 
-        parkingInfo
-            .add(ParkingInfo(sensorId, position, address, zone, occupied));
+        parkingInfo.add(ParkingInfo(sensorId, position.latitude,
+            position.longitude, address, zone, occupied));
       }
     } catch (e) {
-      return null;
+      return [];
     }
     return parkingInfo;
   }
@@ -229,6 +232,7 @@ class SqlService {
         return -1;
       }
       try {
+        print("Address not found. Inserting new addrress.");
         var result = await pool.execute(
             "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
             {
@@ -237,6 +241,8 @@ class SqlService {
               "region": address.region ?? "",
               "country": address.country ?? "",
             });
+
+        sleep(const Duration(milliseconds: 500));
 
         result = await pool.execute(
             "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
@@ -249,11 +255,25 @@ class SqlService {
         ResultSetRow data = result.rows.first;
         id = data.typedColByName<int>("address_id")!;
       } catch (e) {
-        print("ERROR: " + e.toString());
+        print("Failed inserting new addrress: ${e.toString()}");
         id = -1;
       }
 
       return id;
+    }
+  }
+
+  Future<bool> getUserAdminStatus(String uid) async {
+    try {
+      var result =
+          await pool.execute("SELECT is_admin FROM Users WHERE uid = :uid", {
+        "uid": uid,
+      });
+      ResultSetRow data = result.rows.first;
+      bool isAdmin = data.typedColByName<bool>("is_admin")!;
+      return isAdmin;
+    } catch (e) {
+      return false;
     }
   }
 }

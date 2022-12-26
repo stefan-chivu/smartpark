@@ -10,7 +10,6 @@ import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
@@ -35,17 +34,17 @@ class _AddSensorState extends State<AddSensor> {
   @override
   void initState() {
     super.initState();
-    _positionFuture = _getLatLng();
-    _dropdownFuture = _getZones();
+    _positionFuture = getLocationInfo();
+    _dropdownFuture = getZones();
   }
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    _positionFuture = _getLatLng();
+    _positionFuture = getLocationInfo();
   }
 
-  Future<LocationInfo> _getLatLng() async {
+  Future<LocationInfo> getLocationInfo() async {
     print("Fetching current location data");
     LocationData data = await LocationService().getCurrentLocation();
     print("Location data acquired successfully");
@@ -60,31 +59,16 @@ class _AddSensorState extends State<AddSensor> {
 
     LatLng crtLatLng = LatLng(data.latitude!, data.longitude!);
 
-    Address address =
-        await _getAddress(crtLatLng.latitude, crtLatLng.longitude);
+    Address address = await LocationService()
+        .addressFromLatLng(crtLatLng.latitude, crtLatLng.longitude);
 
     return LocationInfo(crtLatLng, address);
   }
 
-  Future<Address> _getAddress(double latitude, double longitude) async {
-    List<Placemark> placemarks =
-        await placemarkFromCoordinates(latitude, longitude);
-
-    Address address = Address(
-        placemarks.first.street,
-        placemarks.first.locality,
-        placemarks.first.administrativeArea,
-        placemarks.first.country);
-    return address;
-  }
-
-  Future<List<DropdownMenuItem<int>>> _getZones() async {
-    print("Awaiting SQL zone information");
-    List<Zone>? _zones = await sqlService.getZones();
-    print("Fetched zone information");
+  Future<List<DropdownMenuItem<int>>> getZones() async {
+    List<Zone>? zones = await sqlService.getZones();
     List<DropdownMenuItem<int>>? dropdownOptions = List.empty(growable: true);
-    // dropdownOptions.add(defaultDropdownItem);
-    if (_zones == null && mounted) {
+    if (zones == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
           "No zones were fetched from the database",
@@ -92,10 +76,10 @@ class _AddSensorState extends State<AddSensor> {
         ),
         backgroundColor: AppColors.orangeRed,
       ));
-      return Future.error("Fetching sensor information failed");
+      return Future.error("Fetching zone information failed");
     }
 
-    for (Zone zone in _zones!) {
+    for (Zone zone in zones!) {
       dropdownOptions.add(DropdownMenuItem(
         value: zone.id,
         child: Text(
@@ -189,9 +173,12 @@ class _AddSensorState extends State<AddSensor> {
                                   myLocationEnabled: true,
                                   onCameraIdle: () async {
                                     _sensorPosition!.address =
-                                        await _getAddress(
-                                            _sensorPosition!.latLng.latitude,
-                                            _sensorPosition!.latLng.longitude);
+                                        await LocationService()
+                                            .addressFromLatLng(
+                                                _sensorPosition!
+                                                    .latLng.latitude,
+                                                _sensorPosition!
+                                                    .latLng.longitude);
                                     setState(() {});
                                   },
                                   onCameraMove: (position) async {
@@ -267,8 +254,8 @@ class _AddSensorState extends State<AddSensor> {
               child: CustomButton(
                   onPressed: () async {
                     if (_zoneID == null && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Please select a zone")));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Please select a zone")));
                       return;
                     }
                     if (_sensorIdFormKey.currentState!.validate()) {

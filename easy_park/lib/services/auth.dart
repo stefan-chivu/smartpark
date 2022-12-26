@@ -1,8 +1,10 @@
+import 'package:easy_park/services/isar.dart';
+import 'package:easy_park/services/sql.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SqlService _sql = SqlService();
 
   Stream<User?> get user {
     return _auth.authStateChanges().map((User? user) => user);
@@ -11,21 +13,30 @@ class AuthService {
   // sign in with email&password
   Future<String> signInWithEmailAndPassword(
       String email, String password) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       // user will be saved in provider
       User? user = result.user;
       if (user != null) {
-        prefs.setString('uid', user.uid);
-        print("Successfully saved uid locally: ${user.uid}");
+        bool isAdmin = false;
+        try {
+          isAdmin = await _sql.getUserAdminStatus(user.uid);
+        } catch (e) {
+          throw FirebaseAuthException(code: 'sql-error');
+        }
+
+        await IsarService.createUserFromFirestoreUser(user, isAdmin);
+        print(
+            "Successfully saved user locally. UID: ${user.uid}. Admin: $isAdmin");
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         return 'An user with this e-mail/password was not found';
       } else if (e.code == 'wrong-password') {
         return 'An user with this e-mail/password was not found';
+      } else if (e.code == 'sql-error') {
+        return 'We had some trouble signing you in, please try again';
       }
     }
     return "success";
@@ -34,16 +45,13 @@ class AuthService {
   // register in with email&password
   Future<String> registerWithEmailAndPassword(
       String email, String password) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
       // user will be saved in provider
       User? user = result.user;
       if (user != null) {
-        prefs.setString('uid', user.uid);
-        print("Successfully saved uid locally: ${user.uid}");
+        await IsarService.createUserFromFirestoreUser(user, false);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
@@ -57,13 +65,10 @@ class AuthService {
 
   // sign-out
   Future signOut() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
     try {
-      prefs.setString('uid', '');
+      await IsarService.deleteLocalUser();
       return await _auth.signOut();
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
