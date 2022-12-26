@@ -74,7 +74,8 @@ class _HomeState extends State<Home> {
       for (ParkingInfo spot in spots) {
         _markers.add(Marker(
             markerId: MarkerId(spot.sensorId.toString()),
-            position: spot.position, //position of marker
+            position:
+                LatLng(spot.latitude, spot.longitude), //position of marker
             infoWindow: InfoWindow(
               //popup info
               title: 'Spot #${spot.sensorId}',

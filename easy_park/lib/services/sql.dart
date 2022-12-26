@@ -27,7 +27,6 @@ class SqlService {
   // i.e. town for narrower query
   Future<List<ParkingInfo>> getParkingSpots() async {
     List<ParkingInfo> parkingInfo = List.empty(growable: true);
-    print("Attempting SQL Connection");
     try {
       var result = await pool.execute("SELECT * FROM Sensors");
 
@@ -47,8 +46,8 @@ class SqlService {
 
         bool occupied = await getSensorStatus(sensorId) ?? false;
 
-        parkingInfo
-            .add(ParkingInfo(sensorId, position, address, zone, occupied));
+        parkingInfo.add(ParkingInfo(sensorId, position.latitude,
+            position.longitude, address, zone, occupied));
       }
     } catch (e) {
       return [];
