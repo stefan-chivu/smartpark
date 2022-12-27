@@ -36,10 +36,7 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
                 icon: Icons.add_location_alt_outlined,
                 text: "Add sensor",
                 onTap: () async {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AddSensor()));
+                  Navigator.pushNamed(context, '/add-sensor');
                 })
             : Container(),
         const Padding(padding: EdgeInsets.all(AppMargins.XS)),
@@ -48,8 +45,8 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
             text: " Sign-out",
             onTap: () async {
               await AuthService().signOut();
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()));
+              // ignore: use_build_context_synchronously
+              Navigator.pushNamed(context, '/');
             }),
         const Padding(padding: EdgeInsets.all(AppMargins.XS))
       ],

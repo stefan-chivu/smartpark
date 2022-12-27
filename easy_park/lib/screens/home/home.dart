@@ -1,19 +1,11 @@
-import 'dart:async';
-
-import 'package:easy_park/models/parking_info.dart';
-import 'package:easy_park/providers/location_provider.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
-import 'package:easy_park/screens/sensor/details.dart';
-import 'package:easy_park/services/location.dart';
-import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -49,6 +41,8 @@ class _HomeState extends ConsumerState<Home> {
                   providerInput.position = tmpPosition;
                   // ignore: unused_result
                   ref.refresh(homePageProvider(providerInput));
+                  showRefresh = false;
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Row(

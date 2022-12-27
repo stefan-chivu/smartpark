@@ -103,10 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(SnackBar(content: Text(result)));
                       } else {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Home()));
+                        Navigator.pushNamed(context, '/');
                       }
                     }
                   }

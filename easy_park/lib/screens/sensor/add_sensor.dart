@@ -158,6 +158,7 @@ class _AddSensorState extends State<AddSensor> {
                                 _sensorPosition!.latLng = _marker!.position;
                               },
                             );
+                            // TODO: replace FutureBuilder logic with FutureProvider
                             return Column(
                               children: [
                                 Align(
