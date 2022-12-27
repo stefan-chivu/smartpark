@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final SqlService _sql = SqlService();
 
   Stream<User?> get user {
     return _auth.authStateChanges().map((User? user) => user);
@@ -21,7 +20,7 @@ class AuthService {
       if (user != null) {
         bool isAdmin = false;
         try {
-          isAdmin = await _sql.getUserAdminStatus(user.uid);
+          isAdmin = await SqlService.getUserAdminStatus(user.uid);
         } catch (e) {
           throw FirebaseAuthException(code: 'sql-error');
         }
