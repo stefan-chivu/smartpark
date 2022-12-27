@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:easy_park/models/address.dart';
 import 'package:geocoding/geocoding.dart' as geocodingpkg;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as locationpkg;
 
 class LocationService {

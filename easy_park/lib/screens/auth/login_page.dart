@@ -83,11 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                           ScaffoldMessenger.of(context)
                               .showSnackBar(SnackBar(content: Text(result)));
                         } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Home()),
-                          );
+                          Navigator.pushNamed(context, '/');
                         }
                       }
                     }
@@ -96,12 +92,8 @@ class _LoginPageState extends State<LoginPage> {
           Padding(
             padding: const EdgeInsets.all(AppMargins.S),
             child: InkWell(
-              //navigate to register
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RegisterPage()),
-                );
+                Navigator.pushNamed(context, '/register');
               },
               child: const Text("Don't have an account? Sign-up",
                   style: TextStyle(
