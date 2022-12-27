@@ -8,12 +8,13 @@ import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/services/constants.dart';
+import 'package:easy_park/services/location.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
 
 class SqlService {
-  final pool = MySQLConnectionPool(
+  static final pool = MySQLConnectionPool(
       host: Constants.sqlHost,
       port: 3306,
       userName: Constants.sqlUserName,
@@ -21,16 +22,31 @@ class SqlService {
       maxConnections: 10,
       databaseName: 'easypark',
       secure: true,
-      timeoutMs: 10000);
+      timeoutMs: 2000);
 
-  //TODO: Add more specific parameters
-  // i.e. town for narrower query
-  Future<List<ParkingInfo>> getParkingSpots() async {
-    List<ParkingInfo> parkingInfo = List.empty(growable: true);
+  static final Map<int, Zone> _zones = {};
+  static final Map<int, Address> _addresses = {};
+
+  SqlService._privateConstructor();
+  static final SqlService instance = SqlService._privateConstructor();
+
+  static Future<Map<int, ParkingInfo>> getParkingSpotsAroundPosition(
+      double latitude, double longitude, double rangeKm) async {
+    Map<int, ParkingInfo> parkingInfo = {};
+    LatLongRangeLimits limits =
+        LocationService.getPointRadiusKm(latitude, longitude, rangeKm);
     try {
-      var result = await pool.execute("SELECT * FROM Sensors");
+      var result = await pool.execute(
+          "SELECT * FROM Sensors WHERE latitude >= :minLat AND latitude <= :maxLat AND longitude >= :minLong AND longitude <= :maxLong",
+          {
+            "minLat": limits.minLat,
+            "maxLat": limits.maxLat,
+            "minLong": limits.minLong,
+            "maxLong": limits.maxLong,
+          });
 
-      print("Fetched Sensor SQL info");
+      print(
+          "Fetched Sensor SQL info within $rangeKm of ($latitude ; $longitude)");
 
       for (var row in result.rows) {
         int sensorId = row.typedColByName<int>("sensor_id")!;
@@ -46,16 +62,17 @@ class SqlService {
 
         bool occupied = await getSensorStatus(sensorId) ?? false;
 
-        parkingInfo.add(ParkingInfo(sensorId, position.latitude,
+        parkingInfo[sensorId] = (ParkingInfo(sensorId, position.latitude,
             position.longitude, address, zone, occupied));
       }
     } catch (e) {
-      return [];
+      print(e.toString());
     }
     return parkingInfo;
   }
 
-  Future<bool?> getSensorStatus(int sensorId) async {
+  static Future<bool?> getSensorStatus(int sensorId) async {
+    print("Fetching sensor $sensorId status");
     try {
       var statusQuery = await pool.execute(
           "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC",
@@ -64,55 +81,67 @@ class SqlService {
       print("Retrieved updated sensor status");
       return data.typedColByName<bool>("occupied")!;
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
 
-  Future<Address> getAddressById(int addressId) async {
-    var result = await pool.execute(
-        "SELECT * FROM Addresses WHERE address_id = :addressId",
-        {"addressId": addressId});
-    ResultSetRow data = result.rows.first;
+  static Future<Address> getAddressById(int addressId) async {
+    if (_addresses[addressId] == null) {
+      var result = await pool.execute(
+          "SELECT * FROM Addresses WHERE address_id = :addressId",
+          {"addressId": addressId});
+      ResultSetRow data = result.rows.first;
 
-    String street = data.typedColByName<String>("street")!;
-    String city = data.typedColByName<String>("city")!;
-    String region = data.typedColByName<String>("region")!;
-    String country = data.typedColByName<String>("country")!;
+      String street = data.typedColByName<String>("street")!;
+      String city = data.typedColByName<String>("city")!;
+      String region = data.typedColByName<String>("region")!;
+      String country = data.typedColByName<String>("country")!;
 
-    return Address(street, city, region, country);
+      _addresses[addressId] = Address(street, city, region, country);
+    }
+
+    return _addresses[addressId]!;
   }
 
-  Future<Zone> getZoneById(int zoneId) async {
-    var zoneQuery = await pool.execute(
-        "SELECT * FROM Zones WHERE zone_id = :zoneId", {"zoneId": zoneId});
-    ResultSetRow data = zoneQuery.rows.first;
+  static Future<Zone> getZoneById(int zoneId) async {
+    if (_zones[zoneId] == null) {
+      var zoneQuery = await pool.execute(
+          "SELECT * FROM Zones WHERE zone_id = :zoneId", {"zoneId": zoneId});
+      ResultSetRow data = zoneQuery.rows.first;
 
-    int id = data.typedColByName<int>("zone_id")!;
-    String name = data.typedColByName<String>("zone_name")!;
-    double hourRate = data.typedColByName<double>("hour_rate")!;
-    double? dayRate = data.typedColByName<double>("day_rate");
-    bool isPrivate = data.typedColByName<bool>("is_private")!;
-    int? totalSpots = data.typedColByName<int>("total_spots");
+      int id = data.typedColByName<int>("zone_id")!;
+      String name = data.typedColByName<String>("zone_name")!;
+      double hourRate = data.typedColByName<double>("hour_rate")!;
+      double? dayRate = data.typedColByName<double>("day_rate");
+      bool isPrivate = data.typedColByName<bool>("is_private")!;
+      int? totalSpots = data.typedColByName<int>("total_spots");
 
-    List<int?> dayIds = []..length = DateTime.daysPerWeek + 1;
-    dayIds[DateTime.monday - 1] = data.typedColByName<int>("mon_schedule_id")!;
-    dayIds[DateTime.tuesday - 1] = data.typedColByName<int>("tue_schedule_id")!;
-    dayIds[DateTime.wednesday - 1] =
-        data.typedColByName<int>("wed_schedule_id")!;
-    dayIds[DateTime.thursday - 1] =
-        data.typedColByName<int>("thu_schedule_id")!;
-    dayIds[DateTime.friday - 1] = data.typedColByName<int>("fri_schedule_id")!;
-    dayIds[DateTime.saturday - 1] =
-        data.typedColByName<int>("sat_schedule_id")!;
-    dayIds[DateTime.sunday - 1] = data.typedColByName<int>("sun_schedule_id")!;
+      List<int?> dayIds = []..length = DateTime.daysPerWeek + 1;
+      dayIds[DateTime.monday - 1] =
+          data.typedColByName<int>("mon_schedule_id")!;
+      dayIds[DateTime.tuesday - 1] =
+          data.typedColByName<int>("tue_schedule_id")!;
+      dayIds[DateTime.wednesday - 1] =
+          data.typedColByName<int>("wed_schedule_id")!;
+      dayIds[DateTime.thursday - 1] =
+          data.typedColByName<int>("thu_schedule_id")!;
+      dayIds[DateTime.friday - 1] =
+          data.typedColByName<int>("fri_schedule_id")!;
+      dayIds[DateTime.saturday - 1] =
+          data.typedColByName<int>("sat_schedule_id")!;
+      dayIds[DateTime.sunday - 1] =
+          data.typedColByName<int>("sun_schedule_id")!;
 
-    Schedule schedule = await buildSchedule(dayIds);
+      Schedule schedule = await SqlService.buildSchedule(dayIds);
 
-    return Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule);
+      _zones[zoneId] =
+          Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule);
+    }
+
+    return _zones[zoneId]!;
   }
 
-  Future<Schedule> buildSchedule(List<int?> ids) async {
+  static Future<Schedule> buildSchedule(List<int?> ids) async {
     Map<int?, DaySchedule> daySchedules = {};
     List<DaySchedule?> result =
         List.filled(DateTime.daysPerWeek, DaySchedule.empty());
@@ -123,10 +152,10 @@ class SqlService {
         var zoneQuery = await pool.execute(
             "SELECT * FROM Schedules WHERE schedule_id = :id", {"id": ids[i]});
         ResultSetRow data = zoneQuery.rows.first;
-        TimeOfDay startHour =
-            parseTimeOfDay(data.typedColByName<String>("start_hour")!);
-        TimeOfDay stopHour =
-            parseTimeOfDay(data.typedColByName<String>("stop_hour")!);
+        TimeOfDay startHour = SqlService.parseTimeOfDay(
+            data.typedColByName<String>("start_hour")!);
+        TimeOfDay stopHour = SqlService.parseTimeOfDay(
+            data.typedColByName<String>("stop_hour")!);
 
         daySchedules[ids[i]] = DaySchedule(startHour, stopHour);
         result[i] = daySchedules[ids[i]]!;
@@ -135,13 +164,13 @@ class SqlService {
     return Schedule(result);
   }
 
-  TimeOfDay parseTimeOfDay(String time) {
+  static TimeOfDay parseTimeOfDay(String time) {
     return TimeOfDay(
         hour: int.parse(time.split(":")[0]),
         minute: int.parse(time.split(":")[1]));
   }
 
-  Future<List<Zone>?> getZones() async {
+  static Future<List<Zone>?> getZones() async {
     List<Zone> zones = List.empty(growable: true);
 
     try {
@@ -185,12 +214,21 @@ class SqlService {
     return zones;
   }
 
-  Future<String> addSensor(
+  static Future<String> addSensor(
       String sensorId, LatLng latLng, Address address, int zoneId) async {
-    int addressId = await findOrCreateAddress(address);
+    int addressId = await SqlService.getAddressId(address);
 
     if (addressId == -1) {
-      return "Failed to obtain address";
+      print("Failed to obtain address");
+      addressId = await SqlService.createAddress(address);
+      for (int attempts = 0; attempts < 3 && addressId == -1; attempts++) {
+        print("Fetching new address. Attempt $attempts");
+        addressId = await SqlService.getAddressId(address);
+      }
+    }
+
+    if (addressId == -1) {
+      return "Failed creating new address";
     }
 
     try {
@@ -213,7 +251,7 @@ class SqlService {
     return "Sensor added successfully";
   }
 
-  Future<int> findOrCreateAddress(Address address) async {
+  static Future<int> getAddressId(Address address) async {
     int id = -1;
     try {
       var result = await pool.execute(
@@ -226,44 +264,46 @@ class SqlService {
           });
       ResultSetRow data = result.rows.first;
       id = data.typedColByName<int>("address_id")!;
-      return id;
     } catch (e) {
       if (!e.toString().contains('Bad state: No element')) {
         return -1;
       }
-      try {
-        print("Address not found. Inserting new addrress.");
-        var result = await pool.execute(
-            "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
-            {
-              "street": address.street ?? "",
-              "city": address.city ?? "",
-              "region": address.region ?? "",
-              "country": address.country ?? "",
-            });
-
-        sleep(const Duration(milliseconds: 500));
-
-        result = await pool.execute(
-            "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
-            {
-              "street": address.street,
-              "city": address.city,
-              "region": address.region,
-              "country": address.country,
-            });
-        ResultSetRow data = result.rows.first;
-        id = data.typedColByName<int>("address_id")!;
-      } catch (e) {
-        print("Failed inserting new addrress: ${e.toString()}");
-        id = -1;
-      }
-
-      return id;
     }
+    return id;
   }
 
-  Future<bool> getUserAdminStatus(String uid) async {
+  static Future<int> createAddress(Address address) async {
+    int id = -1;
+    try {
+      print("Inserting new addrress.");
+      var result = await pool.execute(
+          "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
+          {
+            "street": address.street ?? "",
+            "city": address.city ?? "",
+            "region": address.region ?? "",
+            "country": address.country ?? "",
+          });
+
+      result = await pool.execute(
+          "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
+          {
+            "street": address.street,
+            "city": address.city,
+            "region": address.region,
+            "country": address.country,
+          });
+      ResultSetRow data = result.rows.first;
+      id = data.typedColByName<int>("address_id")!;
+    } catch (e) {
+      print("Failed inserting new addrress: ${e.toString()}");
+      id = -1;
+    }
+
+    return id;
+  }
+
+  static Future<bool> getUserAdminStatus(String uid) async {
     try {
       var result =
           await pool.execute("SELECT is_admin FROM Users WHERE uid = :uid", {
