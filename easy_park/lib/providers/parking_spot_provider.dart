@@ -9,17 +9,20 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 final homePageProvider =
     FutureProvider.family<HomePageInformation, HomePageProviderInput>(
         (ref, input) async {
-  input.position ??= await ref.watch(locationProvider.future);
+  final location = await ref.watch(locationProvider.future);
+  input.position ??= location;
   final parkingSpots = await SqlService.getParkingSpotsAroundPosition(
       input.position!.latitude, input.position!.longitude, 1);
 
   // ignore: use_build_context_synchronously
-  final markers = getMarkers(input.context!, parkingSpots.values.toList());
+  final markers =
+      getMarkers(input.context!, parkingSpots.values.toList(), location);
 
   return HomePageInformation(position: input.position!, markers: markers);
 });
 
-Set<Marker> getMarkers(BuildContext context, List<ParkingInfo>? spots) {
+Set<Marker> getMarkers(
+    BuildContext context, List<ParkingInfo>? spots, LatLng location) {
   if (spots == null) {
     return {};
   }
@@ -37,7 +40,12 @@ Set<Marker> getMarkers(BuildContext context, List<ParkingInfo>? spots) {
             showModalBottomSheet(
                 context: context,
                 builder: (context) {
-                  return Wrap(children: [SpotDetails(spot: spot)]);
+                  return Wrap(children: [
+                    SpotDetails(
+                      spot: spot,
+                      location: location,
+                    )
+                  ]);
                 });
           },
         ),

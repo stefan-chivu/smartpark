@@ -26,8 +26,6 @@ class AuthService {
         }
 
         await IsarService.createUserFromFirestoreUser(user, isAdmin);
-        print(
-            "Successfully saved user locally. UID: ${user.uid}. Admin: $isAdmin");
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {

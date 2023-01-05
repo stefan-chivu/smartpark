@@ -1,7 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:io';
-
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
 import 'package:easy_park/models/parking_info.dart';

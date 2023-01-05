@@ -1,5 +1,3 @@
-import 'package:easy_park/screens/auth/register_page.dart';
-import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:flutter/material.dart';
