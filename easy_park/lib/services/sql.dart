@@ -11,6 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
 
+const bool sensorStatusFree = false;
+const bool sensorStatusOccupied = true;
+
 class SqlService {
   static final pool = MySQLConnectionPool(
       host: Constants.sqlHost,
@@ -28,6 +31,11 @@ class SqlService {
   SqlService._privateConstructor();
   static final SqlService instance = SqlService._privateConstructor();
 
+/* 
+  TODO: only get available spots OR only display available spots
+     by only displaying available spots instead of not fetching them at all
+     some logic such as 'soon-to-be freed' spots might be added 
+*/
   static Future<Map<int, ParkingInfo>> getParkingSpotsAroundPosition(
       double latitude, double longitude, double rangeKm) async {
     Map<int, ParkingInfo> parkingInfo = {};
@@ -72,15 +80,91 @@ class SqlService {
   static Future<bool?> getSensorStatus(int sensorId) async {
     print("Fetching sensor $sensorId status");
     try {
-      var statusQuery = await pool.execute(
-          "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC",
+      var occupancyQuery = await pool.execute(
+          "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC LIMIT 1",
           {"sensorId": sensorId});
-      ResultSetRow data = statusQuery.rows.first;
-      print("Retrieved updated sensor status");
-      return data.typedColByName<bool>("occupied")!;
+      ResultSetRow data = occupancyQuery.rows.first;
+      bool occupied = data.typedColByName<bool>("occupied")!;
+
+      var reservedQuery = await pool.execute(
+          "SELECT reserved FROM Sensors WHERE sensor_id = :sensorId",
+          {"sensorId": sensorId});
+      data = reservedQuery.rows.first;
+      bool reserved = data.typedColByName<bool>("reserved")!;
+      return (occupied | reserved);
     } catch (e) {
       return null;
     }
+  }
+
+  static Future<LatLng?> getSensorPositionById(int sensorId) async {
+    try {
+      var latLngQuery = await pool.execute(
+          "SELECT (latitude, longitude) FROM Sensors WHERE sensor_id = :sensorId LIMIT 1",
+          {"sensorId": sensorId});
+      ResultSetRow data = latLngQuery.rows.first;
+      double latitude = data.typedColByName<double>("latitude")!;
+      double longitude = data.typedColByName<double>("longitude")!;
+      return LatLng(latitude, longitude);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<bool> setParkingSpotStatus(int sensorId, bool status) async {
+    try {
+      var res = await pool.execute(
+          "UPDATE Sensors SET reserved = :status WHERE sensor_id = :sensorId LIMIT 1",
+          {"status": status});
+      return res.affectedRows.toInt() == 1 ? true : false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<ParkingInfo?> getNearestAvailableParkingSpotWithinRange(
+      double latitude, double longitude, double rangeKm) async {
+    LatLongRangeLimits limits =
+        LocationService.getPointRadiusKm(latitude, longitude, rangeKm);
+    try {
+      var result = await pool.execute(
+          "SELECT * FROM Sensors WHERE latitude >= :minLat AND latitude <= :maxLat AND longitude >= :minLong AND longitude <= :maxLong",
+          {
+            "minLat": limits.minLat,
+            "maxLat": limits.maxLat,
+            "minLong": limits.minLong,
+            "maxLong": limits.maxLong,
+          });
+
+      print(
+          "Fetched Sensor SQL info within $rangeKm of ($latitude ; $longitude)");
+
+      for (var row in result.rows) {
+        int sensorId = row.typedColByName<int>("sensor_id")!;
+        bool? status = await getSensorStatus(sensorId) ?? true;
+        if (status == sensorStatusOccupied) {
+          continue;
+        }
+        double lat = row.typedColByName<double>("latitude")!;
+        double long = row.typedColByName<double>("longitude")!;
+        int addressId = row.typedColByName<int>("address_id")!;
+        int zoneId = row.typedColByName<int>("zone_id")!;
+
+        LatLng position = LatLng(lat, long);
+
+        Address address = await getAddressById(addressId);
+        Zone zone = await getZoneById(zoneId);
+
+        bool occupied = await getSensorStatus(sensorId) ?? false;
+
+        return (ParkingInfo(sensorId, position.latitude, position.longitude,
+            address, zone, occupied));
+      }
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+    return null;
   }
 
   static Future<Address> getAddressById(int addressId) async {
@@ -241,7 +325,14 @@ class SqlService {
           "zone_id": zoneId,
         },
       );
+      print(res.affectedRows);
 
+      res = await pool.execute(
+        "INSERT INTO `Occupancy` (`sensor_id`) VALUES (:sensor_id)",
+        {
+          "sensor_id": int.parse(sensorId),
+        },
+      );
       print(res.affectedRows);
     } catch (e) {
       return e.toString();
@@ -311,6 +402,7 @@ class SqlService {
       bool isAdmin = data.typedColByName<bool>("is_admin")!;
       return isAdmin;
     } catch (e) {
+      // TODO: add user as non-admin if it doesn't exist
       return false;
     }
   }

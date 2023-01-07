@@ -54,7 +54,9 @@ class SpotDetails extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => MapScreen(
-                          destination: LatLng(spot.latitude, spot.longitude)),
+                        destination: LatLng(spot.latitude, spot.longitude),
+                        sensorId: spot.sensorId,
+                      ),
                     ));
               },
             )),

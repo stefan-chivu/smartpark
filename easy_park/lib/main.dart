@@ -3,6 +3,7 @@ import 'package:easy_park/screens/auth/register_page.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/screens/sensor/add_sensor.dart';
 import 'package:easy_park/services/isar.dart';
+import 'package:easy_park/services/location.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:easy_park/screens/home/home_wrapper.dart';
@@ -13,6 +14,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await IsarService.openSchemas();
+  await LocationService.init();
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -23,6 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'EasyPark',
         theme: ThemeData(
           fontFamily: 'OpenSans',
