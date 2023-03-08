@@ -406,4 +406,16 @@ class SqlService {
       return false;
     }
   }
+
+  // TODO: add other user fields e.g. email
+  static Future<void> addUserToDatabase(String uid, bool isAdmin) async {
+    var result = await pool.execute(
+        "INSERT INTO `Users` (`uid`, `is_admin`) VALUES (:uid, :is_admin)", {
+      "uid": uid,
+      "is_admin": isAdmin,
+    });
+    if (result.affectedRows.toInt() != 0) {
+      throw Exception("Failed adding new user to database");
+    }
+  }
 }
