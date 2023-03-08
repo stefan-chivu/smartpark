@@ -70,8 +70,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   controller.animateCamera(CameraUpdate.newLatLngBounds(
                       providerData.directions.bounds!, 20.0));
                 });
+                // TODO: find alternative to polling
                 timer = Timer.periodic(
-                  const Duration(seconds: 3),
+                  const Duration(seconds: 15),
                   (timer) async {
                     if (_timerOpsCompleted) {
                       setState(() {
@@ -191,26 +192,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ),
             //TODO: remove if not necessary for
             // debugging purposes anymore
-            Positioned(
-              bottom: 20.0,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
-                decoration: BoxDecoration(
-                    color: AppColors.pineTree,
-                    borderRadius: BorderRadius.circular(20.0),
-                    boxShadow: const [
-                      BoxShadow(
-                          color: AppColors.pineTree,
-                          offset: Offset(0, 2),
-                          blurRadius: 6.0)
-                    ]),
-                child: Text(
-                  '${widget.providerInput.sensorId}: ${widget.providerInput.destination.toString()}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            )
+            // Positioned(
+            //   bottom: 20.0,
+            //   child: Container(
+            //     padding:
+            //         const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+            //     decoration: BoxDecoration(
+            //         color: AppColors.pineTree,
+            //         borderRadius: BorderRadius.circular(20.0),
+            //         boxShadow: const [
+            //           BoxShadow(
+            //               color: AppColors.pineTree,
+            //               offset: Offset(0, 2),
+            //               blurRadius: 6.0)
+            //         ]),
+            //     child: Text(
+            //       '${widget.providerInput.sensorId}: ${widget.providerInput.destination.toString()}',
+            //       style: const TextStyle(color: Colors.white),
+            //     ),
+            //   ),
+            // )
           ]));
     }, error: ((error, stackTrace) {
       return Scaffold(body: ErrorPage(errorMsg: 'Error: ${error.toString()}'));
