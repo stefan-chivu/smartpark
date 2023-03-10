@@ -26,8 +26,6 @@ class AuthService {
         }
 
         await IsarService.createUserFromFirestoreUser(user, isAdmin);
-        print(
-            "Successfully saved user locally. UID: ${user.uid}. Admin: $isAdmin");
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -50,6 +48,7 @@ class AuthService {
       // user will be saved in provider
       User? user = result.user;
       if (user != null) {
+        await SqlService.addUserToDatabase(user.uid, false);
         await IsarService.createUserFromFirestoreUser(user, false);
       }
     } on FirebaseAuthException catch (e) {
@@ -58,6 +57,8 @@ class AuthService {
       } else if (e.code == 'email-already-in-use') {
         return 'This e-mail is already in use!';
       }
+    } catch (e) {
+      return e.toString();
     }
     return "success";
   }

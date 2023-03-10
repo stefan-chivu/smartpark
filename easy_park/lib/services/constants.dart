@@ -4,4 +4,6 @@ abstract class Constants {
       String.fromEnvironment('EASYPARK_SQL_USERNAME');
   static const String sqlPassword =
       String.fromEnvironment('EASYPARK_SQL_PASSWORD');
+  static const String googleMapsApiKey =
+      String.fromEnvironment('GOOGLE_MAPS_API_KEY');
 }

@@ -1,6 +1,4 @@
-import 'package:easy_park/screens/auth/login_page.dart';
 import 'package:easy_park/screens/home/home.dart';
-import 'package:easy_park/screens/sensor/add_sensor.dart';
 import 'package:easy_park/services/auth.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/ui_components/menu_button.dart';
