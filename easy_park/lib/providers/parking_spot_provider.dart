@@ -5,20 +5,20 @@ import 'package:easy_park/services/sql.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
-final homePageProvider =
-    FutureProvider.family<HomePageInformation, HomePageProviderInput>(
-        (ref, input) async {
+final spotProvider =
+    FutureProvider.family<SpotListData, SpotProviderInput>((ref, input) async {
   final locationData = await LocationService.getCurrentLocation();
   input.position ??= LatLng(locationData.latitude!, locationData.longitude!);
-  final parkingSpots = await SqlService.getParkingSpotsAroundPosition(
-      input.position!.latitude, input.position!.longitude, 1);
+  final parkingSpots = input.spots ??
+      await SqlService.getParkingSpotsAroundPosition(
+          input.position!.latitude, input.position!.longitude, 1);
 
-  // ignore: use_build_context_synchronously
-  final markers =
-      getMarkers(input.context!, parkingSpots.values.toList(), input.position!);
-
-  return HomePageInformation(position: input.position!, markers: markers);
+  return SpotListData(
+      location: locationData,
+      searchPosition: input.position!,
+      spots: parkingSpots);
 });
 
 Set<Marker> getMarkers(
@@ -49,32 +49,48 @@ Set<Marker> getMarkers(
                 });
           },
         ),
-        icon: getMarkerIcon(spot.occupied)));
+        icon: getMarkerIcon(spot.state)));
   }
 
   return markers;
 }
 
-BitmapDescriptor getMarkerIcon(bool occupied) {
-  return occupied
-      ? BitmapDescriptor.defaultMarker
-      : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+BitmapDescriptor getMarkerIcon(SpotState state) {
+  switch (state) {
+    case SpotState.occupied:
+      return BitmapDescriptor.defaultMarker;
+    case SpotState.free:
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+    case SpotState.reserved:
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    case SpotState.freeingSoon:
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet);
+    default:
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+  }
 }
 
-class HomePageInformation {
-  LatLng position;
-  Set<Marker> markers;
+class SpotListData {
+  LatLng searchPosition;
+  List<ParkingInfo> spots;
+  LocationData location;
 
-  HomePageInformation({required this.position, required this.markers});
+  SpotListData(
+      {required this.location,
+      required this.spots,
+      required this.searchPosition});
 }
 
-class HomePageProviderInput {
+class SpotProviderInput {
   BuildContext? context;
   LatLng? position;
   double sensorRange;
+  List<ParkingInfo>? spots;
 
-  HomePageProviderInput(
+  // TODO: some of these might not need the required param
+  SpotProviderInput(
       {required this.context,
       required this.position,
-      required this.sensorRange});
+      required this.sensorRange,
+      required this.spots});
 }

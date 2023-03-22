@@ -30,6 +30,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void dispose() {
     googleMapController.dispose();
+    // TODO: Cancel reservation here
     super.dispose();
   }
 
@@ -80,10 +81,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       });
 
                       // TODO: check occupied by uid
-                      bool? status = await SqlService.getSensorStatus(
+                      SpotState status = await SqlService.getSensorStatus(
                           widget.providerInput.sensorId!);
 
-                      if (status == sensorStatusOccupied) {
+                      if (status == SpotState.occupied) {
                         bool found = false;
                         ParkingInfo? newSensor;
                         // if the sensor that the user was currently going to gets occupied,

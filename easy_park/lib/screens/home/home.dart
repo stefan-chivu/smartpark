@@ -17,15 +17,15 @@ class Home extends ConsumerStatefulWidget {
 typedef MarkerUpdateAction = Marker Function(Marker marker);
 
 class _HomeState extends ConsumerState<Home> {
-  HomePageProviderInput providerInput =
-      HomePageProviderInput(context: null, position: null, sensorRange: 1);
+  SpotProviderInput providerInput = SpotProviderInput(
+      context: null, position: null, sensorRange: 1, spots: null);
   bool showRefresh = false;
   LatLng? tmpPosition;
 
   @override
   Widget build(BuildContext context) {
     providerInput.context = context;
-    final providerData = ref.watch(homePageProvider(providerInput));
+    final providerData = ref.watch(spotProvider(providerInput));
 
     return providerData.when(data: (providerData) {
       return Scaffold(
@@ -40,7 +40,7 @@ class _HomeState extends ConsumerState<Home> {
                 setState(() {
                   providerInput.position = tmpPosition;
                   // ignore: unused_result
-                  ref.refresh(homePageProvider(providerInput));
+                  ref.refresh(spotProvider(providerInput));
                   showRefresh = false;
 
                   if (mounted) {
@@ -66,8 +66,10 @@ class _HomeState extends ConsumerState<Home> {
               FloatingActionButtonLocation.miniCenterFloat,
           body: GoogleMap(
             mapType: MapType.normal,
-            initialCameraPosition:
-                CameraPosition(target: providerData.position, zoom: 18),
+            initialCameraPosition: CameraPosition(
+                target: LatLng(providerData.location.latitude!,
+                    providerData.location.longitude!),
+                zoom: 18),
             onCameraMoveStarted: () {
               showRefresh = true;
               setState(() {});
@@ -78,9 +80,15 @@ class _HomeState extends ConsumerState<Home> {
               });
             },
             myLocationEnabled: true,
-            markers: providerData.markers,
+            markers: getMarkers(
+                context,
+                providerData.spots,
+                LatLng(providerData.location.latitude!,
+                    providerData.location.longitude!)),
           ),
-          bottomNavigationBar: const CustomNavBar());
+          bottomNavigationBar: CustomNavBar(
+              position: tmpPosition,
+              spots: !showRefresh ? providerData.spots : null));
     }, error: ((error, stackTrace) {
       return ErrorPage(errorMsg: 'Error: ${error.toString()}');
     }), loading: () {
