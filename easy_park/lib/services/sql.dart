@@ -201,6 +201,7 @@ class SqlService {
       String name = data.typedColByName<String>("zone_name")!;
       double hourRate = data.typedColByName<double>("hour_rate")!;
       double? dayRate = data.typedColByName<double>("day_rate");
+      String currency = data.typedColByName<String>("currency")!;
       bool isPrivate = data.typedColByName<bool>("is_private")!;
       int? totalSpots = data.typedColByName<int>("total_spots");
 
@@ -222,8 +223,8 @@ class SqlService {
 
       Schedule schedule = await SqlService.buildSchedule(dayIds);
 
-      _zones[zoneId] =
-          Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule);
+      _zones[zoneId] = Zone(id, name, hourRate, dayRate, currency, isPrivate,
+          totalSpots, schedule);
     }
 
     return _zones[zoneId]!;
@@ -268,6 +269,7 @@ class SqlService {
         String name = row.typedColByName<String>("zone_name")!;
         double hourRate = row.typedColByName<double>("hour_rate")!;
         double? dayRate = row.typedColByName<double>("day_rate");
+        String currency = row.typedColByName<String>("currency")!;
         bool isPrivate = row.typedColByName<bool>("is_private")!;
         int? totalSpots = row.typedColByName<int>("total_spots");
 
@@ -289,8 +291,8 @@ class SqlService {
 
         Schedule schedule = await buildSchedule(dayIds);
 
-        zones.add(
-            Zone(id, name, hourRate, dayRate, isPrivate, totalSpots, schedule));
+        zones.add(Zone(id, name, hourRate, dayRate, currency, isPrivate,
+            totalSpots, schedule));
       }
     } catch (e) {
       print(e.toString());

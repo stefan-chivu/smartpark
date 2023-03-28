@@ -35,7 +35,7 @@ Set<Marker> getMarkers(
         infoWindow: InfoWindow(
           //popup info
           title: 'Spot #${spot.sensorId}',
-          snippet: 'Price: ${spot.zone.hourRate}RON/h',
+          snippet: 'Price: ${spot.zone.hourRate}${spot.zone.currency}/h',
           onTap: () {
             showModalBottomSheet(
                 context: context,
