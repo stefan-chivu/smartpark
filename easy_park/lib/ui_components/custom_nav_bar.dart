@@ -16,19 +16,12 @@ class CustomNavBar extends StatelessWidget {
       iconSize: AppFontSizes.XL,
       selectedFontSize: AppFontSizes.L,
       unselectedFontSize: AppFontSizes.L,
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
       items: const [
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.history),
-            label: "History"),
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.payment),
-            label: "Pay"),
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.list),
-            label: "Spots")
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+        BottomNavigationBarItem(icon: Icon(Icons.payment), label: "Pay"),
+        BottomNavigationBarItem(icon: Icon(Icons.list), label: "Spots")
       ],
       onTap: ((index) {
         switch (index) {
