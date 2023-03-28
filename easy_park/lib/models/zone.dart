@@ -5,11 +5,11 @@ class Zone {
   String name;
   double hourRate;
   double? dayRate;
-  String currency = "RON"; // TODO Add DB currency field
+  String currency;
   bool isPrivate = false;
   int? totalSpots;
   Schedule schedule;
 
-  Zone(this.id, this.name, this.hourRate, this.dayRate, this.isPrivate,
-      this.totalSpots, this.schedule);
+  Zone(this.id, this.name, this.hourRate, this.dayRate, this.currency,
+      this.isPrivate, this.totalSpots, this.schedule);
 }

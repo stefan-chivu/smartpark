@@ -36,12 +36,10 @@ class _SearchAddressTextFieldState extends State<SearchAddressTextField> {
           delegate: AddressSearch(sessionToken: sessionToken),
         );
 
-        if (result != null &&
-            result.description.isNotEmpty &&
-            result.location != null) {
+        if (result != null && result.description.isNotEmpty) {
           setState(() {
             widget.controller.text = result.description;
-            if (widget.mapController != null) {
+            if (widget.mapController != null && result.location != null) {
               widget.mapController!.animateCamera(
                   CameraUpdate.newLatLngZoom(result.location!, 16.5));
             }
