@@ -1,11 +1,14 @@
+import 'package:easy_park/models/address.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
+import 'package:easy_park/services/location.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/search_address_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Home extends ConsumerStatefulWidget {
@@ -48,26 +51,28 @@ class _HomeState extends ConsumerState<Home> {
               isExtended: true,
               backgroundColor: Colors.blueGrey,
               onPressed: () async {
+                // ignore: unused_result
+                ref.refresh(spotProvider(providerInput));
+                Address newAddress = await LocationService.addressFromLatLng(
+                    tmpPosition!.latitude, tmpPosition!.longitude);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          CircularProgressIndicator(),
+                          SizedBox(
+                            width: AppMargins.M,
+                          ),
+                          Text("Finding parking spots around here...")
+                        ]),
+                    backgroundColor: AppColors.blueGreen,
+                  ));
+                }
                 setState(() {
                   providerInput.position = tmpPosition;
-                  // ignore: unused_result
-                  ref.refresh(spotProvider(providerInput));
                   showRefresh = false;
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            CircularProgressIndicator(),
-                            SizedBox(
-                              width: AppMargins.M,
-                            ),
-                            Text("Finding parking spots around here...")
-                          ]),
-                      backgroundColor: AppColors.blueGreen,
-                    ));
-                  }
+                  _controller.text = newAddress.toString();
                 });
               },
               label: const Text("Search this area"),
