@@ -57,6 +57,7 @@ class _HomeState extends ConsumerState<Home> {
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    duration: const Duration(seconds: 2),
                     content: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
@@ -74,6 +75,25 @@ class _HomeState extends ConsumerState<Home> {
                   showRefresh = false;
                   _controller.text = newAddress.toString();
                 });
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    duration: const Duration(seconds: 5),
+                    content: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Found ${providerData.spots.length} spots!"),
+                          const SizedBox(
+                            width: AppMargins.XS,
+                          ),
+                          const Icon(
+                            Icons.local_parking_outlined,
+                            color: AppColors.emerald,
+                          ),
+                        ]),
+                    backgroundColor: AppColors.pineTree,
+                  ));
+                }
               },
               label: const Text("Search this area"),
             ),
