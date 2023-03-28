@@ -36,9 +36,9 @@ class SqlService {
      by only displaying available spots instead of not fetching them at all
      some logic such as 'soon-to-be freed' spots might be added 
 */
-  static Future<Map<int, ParkingInfo>> getParkingSpotsAroundPosition(
+  static Future<List<ParkingInfo>> getParkingSpotsAroundPosition(
       double latitude, double longitude, double rangeKm) async {
-    Map<int, ParkingInfo> parkingInfo = {};
+    List<ParkingInfo> parkingInfo = [];
     LatLongRangeLimits limits =
         LocationService.getPointRadiusKm(latitude, longitude, rangeKm);
     try {
@@ -66,10 +66,10 @@ class SqlService {
         Address address = await getAddressById(addressId);
         Zone zone = await getZoneById(zoneId);
 
-        bool occupied = await getSensorStatus(sensorId) ?? false;
+        SpotState spotState = await getSensorStatus(sensorId);
 
-        parkingInfo[sensorId] = (ParkingInfo(sensorId, position.latitude,
-            position.longitude, address, zone, occupied));
+        parkingInfo.add((ParkingInfo(sensorId, position.latitude,
+            position.longitude, address, zone, spotState)));
       }
     } catch (e) {
       print(e.toString());
@@ -77,7 +77,7 @@ class SqlService {
     return parkingInfo;
   }
 
-  static Future<bool?> getSensorStatus(int sensorId) async {
+  static Future<SpotState> getSensorStatus(int sensorId) async {
     print("Fetching sensor $sensorId status");
     try {
       var occupancyQuery = await pool.execute(
@@ -91,9 +91,17 @@ class SqlService {
           {"sensorId": sensorId});
       data = reservedQuery.rows.first;
       bool reserved = data.typedColByName<bool>("reserved")!;
-      return (occupied | reserved);
+      if (occupied) {
+        return SpotState.occupied;
+      }
+
+      if (reserved) {
+        return SpotState.reserved;
+      }
+
+      return SpotState.free;
     } catch (e) {
-      return null;
+      return SpotState.unknown;
     }
   }
 
@@ -141,8 +149,8 @@ class SqlService {
 
       for (var row in result.rows) {
         int sensorId = row.typedColByName<int>("sensor_id")!;
-        bool? status = await getSensorStatus(sensorId) ?? true;
-        if (status == sensorStatusOccupied) {
+        SpotState spotState = await getSensorStatus(sensorId);
+        if (spotState != SpotState.free) {
           continue;
         }
         double lat = row.typedColByName<double>("latitude")!;
@@ -155,10 +163,8 @@ class SqlService {
         Address address = await getAddressById(addressId);
         Zone zone = await getZoneById(zoneId);
 
-        bool occupied = await getSensorStatus(sensorId) ?? false;
-
         return (ParkingInfo(sensorId, position.latitude, position.longitude,
-            address, zone, occupied));
+            address, zone, spotState));
       }
     } catch (e) {
       print(e.toString());
@@ -417,5 +423,15 @@ class SqlService {
     if (result.affectedRows.toInt() != 0) {
       throw Exception("Failed adding new user to database");
     }
+  }
+
+  static Future<void> reserveSpot(String uid, int spotId) async {
+    // TODO: implement reservation mechanism; NO-OP for now
+    // var result = await pool.execute(
+    //     "UPDATE `Sensors` SET (`reserved_by`, `reserved`) VALUES (:uid, :)",
+    //     {"uid": uid, "reserved": 1});
+    // if (result.affectedRows.toInt() != 1) {
+    //   throw Exception("Failed adding new user to database");
+    // }
   }
 }

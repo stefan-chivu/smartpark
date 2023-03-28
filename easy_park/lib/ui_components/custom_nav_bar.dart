@@ -1,8 +1,12 @@
+import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomNavBar extends StatelessWidget {
-  const CustomNavBar({super.key});
+  final LatLng? position;
+  final List<ParkingInfo>? spots;
+  const CustomNavBar({super.key, this.position, this.spots});
 
   @override
   Widget build(BuildContext context) {
@@ -12,23 +16,12 @@ class CustomNavBar extends StatelessWidget {
       iconSize: AppFontSizes.XL,
       selectedFontSize: AppFontSizes.L,
       unselectedFontSize: AppFontSizes.L,
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
       items: const [
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.history),
-            label: "History"),
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.payment),
-            label: "Pay"),
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.search),
-            label: "Find"),
-        BottomNavigationBarItem(
-            backgroundColor: AppColors.slateGray,
-            icon: Icon(Icons.list),
-            label: "Spots")
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+        BottomNavigationBarItem(icon: Icon(Icons.payment), label: "Pay"),
+        BottomNavigationBarItem(icon: Icon(Icons.list), label: "Spots")
       ],
       onTap: ((index) {
         switch (index) {
@@ -65,35 +58,13 @@ class CustomNavBar extends StatelessWidget {
             );
             break;
           case 2:
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: const Text('Find parking spots'),
-                actions: <TextButton>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  )
-                ],
-              ),
-            );
-            break;
-          case 3:
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: const Text('View parking spots'),
-                actions: <TextButton>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  )
-                ],
-              ),
+            Navigator.pushNamed(
+              context,
+              '/spot-list',
+              arguments: <String, dynamic>{
+                'position': position,
+                'spots': spots,
+              },
             );
             break;
         }

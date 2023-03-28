@@ -1,5 +1,7 @@
 import 'package:easy_park/services/directions.dart';
+import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/location.dart';
+import 'package:easy_park/services/sql.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -14,16 +16,11 @@ final directionsProvider = FutureProvider.autoDispose
   final icon = await BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(devicePixelRatio: 3.2),
       "assets/images/car_pin.png");
-  // Address startAddress = await LocationService.addressFromLatLng(
-  //     location.latitude, location.longitude);
-  // Address destinationAddress = await LocationService.addressFromLatLng(
-  //     input.destination!.latitude, input.destination!.longitude);
 
+  await SqlService.reserveSpot(IsarService.getUid(), input.sensorId!);
   return DirectionsInformation(
       origin: location,
       destination: input.destination!,
-      // originAddress: startAddress,
-      // destinationAddress: destinationAddress,
       bitmapIcon: icon,
       directions: directions);
 });
@@ -31,8 +28,6 @@ final directionsProvider = FutureProvider.autoDispose
 class DirectionsInformation {
   LatLng origin;
   LatLng destination;
-  // Address originAddress;
-  // Address destinationAddress;
   Directions directions;
 
   BitmapDescriptor bitmapIcon;
@@ -40,8 +35,6 @@ class DirectionsInformation {
   DirectionsInformation(
       {required this.origin,
       required this.destination,
-      // required this.originAddress,
-      // required this.destinationAddress,
       required this.bitmapIcon,
       required this.directions});
 }
