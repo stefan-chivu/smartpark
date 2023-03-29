@@ -2,6 +2,7 @@
 
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
+import 'package:easy_park/models/isar_user.dart';
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
@@ -400,31 +401,54 @@ class SqlService {
     return id;
   }
 
-  static Future<bool> getUserAdminStatus(String uid) async {
+  static Future<IsarUser?> getUser(String uid, String email) async {
     try {
-      var result =
-          await pool.execute("SELECT is_admin FROM Users WHERE uid = :uid", {
+      var result = await pool.execute("SELECT * FROM Users WHERE uid = :uid", {
         "uid": uid,
       });
       ResultSetRow data = result.rows.first;
       bool isAdmin = data.typedColByName<bool>("is_admin")!;
-      return isAdmin;
+      String email = data.typedColByName<String>("email")!;
+      String firstName = data.typedColByName<String>("firstName") ?? '';
+      String lastName = data.typedColByName<String>("lastName") ?? '';
+      String licensePlate = data.typedColByName<String>("license_plate") ?? '';
+      String homeAddress = data.typedColByName<String>("home_address") ?? '';
+      String workAddress = data.typedColByName<String>("work_address") ?? '';
+      return IsarUser(
+          uid: uid,
+          email: email,
+          isAdmin: isAdmin,
+          firstName: firstName,
+          lastName: lastName,
+          licensePlate: licensePlate,
+          homeAddress: homeAddress,
+          workAddress: workAddress);
     } catch (e) {
-      // TODO: add user as non-admin if it doesn't exist
-      return false;
+      return null;
     }
   }
 
-  // TODO: add other user fields e.g. email
-  static Future<void> addUserToDatabase(String uid, bool isAdmin) async {
+  static Future<void> addUserToDatabase(
+      String uid,
+      String email,
+      bool isAdmin,
+      String firstName,
+      String lastName,
+      String licensePlate,
+      String homeAddress,
+      String workAddress) async {
     var result = await pool.execute(
-        "INSERT INTO `Users` (`uid`, `is_admin`) VALUES (:uid, :is_admin)", {
-      "uid": uid,
-      "is_admin": isAdmin,
-    });
-    if (result.affectedRows.toInt() != 0) {
-      throw Exception("Failed adding new user to database");
-    }
+        "INSERT INTO `Users` (`uid`, `email`, `is_admin`, `first_name`, `last_name`, `license_plate`, `home_address`, `work_address`) VALUES (:uid, :email, :is_admin, :first_name, :last_name, :license_plate, :home_address, :work_address)",
+        {
+          "uid": uid,
+          "email": email,
+          "is_admin": isAdmin,
+          "first_name": firstName,
+          "last_name": lastName,
+          "license_plate": licensePlate,
+          "home_address": homeAddress,
+          "work_address": workAddress,
+        });
   }
 
   static Future<void> reserveSpot(String uid, int spotId) async {

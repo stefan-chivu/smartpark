@@ -16,7 +16,15 @@ class IsarService {
 
   static Future<void> initUser() async {
     isarUser = await isar.isarUsers.get(0) ??
-        IsarUser(uid: '', email: '', isAdmin: false);
+        IsarUser(
+            uid: '',
+            email: '',
+            isAdmin: false,
+            firstName: '',
+            lastName: '',
+            licensePlate: '',
+            homeAddress: '',
+            workAddress: '');
     await isar.writeTxn(() async {
       await isar.isarUsers.put(isarUser);
     });
@@ -26,11 +34,24 @@ class IsarService {
       User user, bool isAdmin) async {
     await isar.writeTxn(() async {
       await isar.isarUsers.delete(isarUser.id);
-      IsarUser isarUserFromFirestoreUser =
-          IsarUser(uid: user.uid, email: user.email ?? "", isAdmin: isAdmin);
+      IsarUser isarUserFromFirestoreUser = IsarUser(
+          uid: user.uid,
+          email: user.email ?? "",
+          isAdmin: isAdmin,
+          firstName: '',
+          lastName: '',
+          licensePlate: '',
+          homeAddress: '',
+          workAddress: '');
 
       isarUser = isarUserFromFirestoreUser;
       await isar.isarUsers.put(isarUser);
+    });
+  }
+
+  static Future<void> setUser(IsarUser user) async {
+    await isar.writeTxn(() async {
+      await isar.isarUsers.put(user);
     });
   }
 

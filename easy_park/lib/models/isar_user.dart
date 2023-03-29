@@ -11,6 +11,19 @@ class IsarUser {
 
   String email;
   bool isAdmin = false;
+  String firstName;
+  String lastName;
+  String licensePlate;
+  String homeAddress;
+  String workAddress;
 
-  IsarUser({required this.uid, required this.email, required this.isAdmin});
+  IsarUser(
+      {required this.uid,
+      required this.email,
+      required this.isAdmin,
+      required this.firstName,
+      required this.lastName,
+      required this.licensePlate,
+      required this.homeAddress,
+      required this.workAddress});
 }

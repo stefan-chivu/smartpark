@@ -1,3 +1,4 @@
+import 'package:easy_park/models/isar_user.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,17 +16,14 @@ class AuthService {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
-      // user will be saved in provider
+      // user will be stored locally
       User? user = result.user;
-      if (user != null) {
-        bool isAdmin = false;
-        try {
-          isAdmin = await SqlService.getUserAdminStatus(user.uid);
-        } catch (e) {
+      if (user != null && user.email != null) {
+        IsarUser? isarUser = await SqlService.getUser(user.uid, user.email!);
+        if (isarUser == null) {
           throw FirebaseAuthException(code: 'sql-error');
         }
-
-        await IsarService.createUserFromFirestoreUser(user, isAdmin);
+        await IsarService.setUser(isarUser);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -47,9 +45,18 @@ class AuthService {
           email: email, password: password);
       // user will be saved in provider
       User? user = result.user;
-      if (user != null) {
-        await SqlService.addUserToDatabase(user.uid, false);
+      if (user != null && user.email != null) {
+        try {
+          await SqlService.addUserToDatabase(
+              user.uid, user.email!, false, '', '', '', '', '');
+        } catch (e) {
+          await user.delete();
+          return 'Registration failed';
+        }
         await IsarService.createUserFromFirestoreUser(user, false);
+        return "success";
+      } else {
+        return 'Registration failed';
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
