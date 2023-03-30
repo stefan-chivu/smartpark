@@ -1,10 +1,17 @@
 class Address {
-  String street;
-  String city;
-  String region;
-  String country;
+  late String street;
+  late String city;
+  late String region;
+  late String country;
 
   Address(this.street, this.city, this.region, this.country);
+
+  Address.empty() {
+    street = '';
+    city = '';
+    region = '';
+    country = '';
+  }
 
   Address.fromJson(Map<String, dynamic> json)
       : street = json['street'] ?? '',

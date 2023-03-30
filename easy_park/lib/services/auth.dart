@@ -1,3 +1,4 @@
+import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/models/isar_user.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/sql.dart';
@@ -23,7 +24,14 @@ class AuthService {
         if (isarUser == null) {
           throw FirebaseAuthException(code: 'sql-error');
         }
+        List<IsarCar>? isarCars = await SqlService.getUserCars(user.uid);
+
+        if (isarCars == null) {
+          throw FirebaseAuthException(code: 'sql-error');
+        }
+
         await IsarService.setUser(isarUser);
+        await IsarService.setUserCars(isarCars);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {

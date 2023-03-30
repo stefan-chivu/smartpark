@@ -42,10 +42,10 @@ const IsarUserSchema = CollectionSchema(
       name: r'lastName',
       type: IsarType.string,
     ),
-    r'licensePlate': PropertySchema(
+    r'onboardingComplete': PropertySchema(
       id: 5,
-      name: r'licensePlate',
-      type: IsarType.string,
+      name: r'onboardingComplete',
+      type: IsarType.bool,
     ),
     r'uid': PropertySchema(
       id: 6,
@@ -96,7 +96,6 @@ int _isarUserEstimateSize(
   bytesCount += 3 + object.firstName.length * 3;
   bytesCount += 3 + object.homeAddress.length * 3;
   bytesCount += 3 + object.lastName.length * 3;
-  bytesCount += 3 + object.licensePlate.length * 3;
   bytesCount += 3 + object.uid.length * 3;
   bytesCount += 3 + object.workAddress.length * 3;
   return bytesCount;
@@ -113,7 +112,7 @@ void _isarUserSerialize(
   writer.writeString(offsets[2], object.homeAddress);
   writer.writeBool(offsets[3], object.isAdmin);
   writer.writeString(offsets[4], object.lastName);
-  writer.writeString(offsets[5], object.licensePlate);
+  writer.writeBool(offsets[5], object.onboardingComplete);
   writer.writeString(offsets[6], object.uid);
   writer.writeString(offsets[7], object.workAddress);
 }
@@ -130,7 +129,7 @@ IsarUser _isarUserDeserialize(
     homeAddress: reader.readString(offsets[2]),
     isAdmin: reader.readBool(offsets[3]),
     lastName: reader.readString(offsets[4]),
-    licensePlate: reader.readString(offsets[5]),
+    onboardingComplete: reader.readBool(offsets[5]),
     uid: reader.readString(offsets[6]),
     workAddress: reader.readString(offsets[7]),
   );
@@ -155,7 +154,7 @@ P _isarUserDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
@@ -980,136 +979,12 @@ extension IsarUserQueryFilter
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition>
+      onboardingCompleteEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'licensePlate',
+        property: r'onboardingComplete',
         value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition>
-      licensePlateGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'licensePlate',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'licensePlate',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'licensePlate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition>
-      licensePlateStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'licensePlate',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'licensePlate',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'licensePlate',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition> licensePlateMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'licensePlate',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition>
-      licensePlateIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'licensePlate',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<IsarUser, IsarUser, QAfterFilterCondition>
-      licensePlateIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'licensePlate',
-        value: '',
       ));
     });
   }
@@ -1444,15 +1319,16 @@ extension IsarUserQuerySortBy on QueryBuilder<IsarUser, IsarUser, QSortBy> {
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> sortByLicensePlate() {
+  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> sortByOnboardingComplete() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'licensePlate', Sort.asc);
+      return query.addSortBy(r'onboardingComplete', Sort.asc);
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> sortByLicensePlateDesc() {
+  QueryBuilder<IsarUser, IsarUser, QAfterSortBy>
+      sortByOnboardingCompleteDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'licensePlate', Sort.desc);
+      return query.addSortBy(r'onboardingComplete', Sort.desc);
     });
   }
 
@@ -1555,15 +1431,16 @@ extension IsarUserQuerySortThenBy
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> thenByLicensePlate() {
+  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> thenByOnboardingComplete() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'licensePlate', Sort.asc);
+      return query.addSortBy(r'onboardingComplete', Sort.asc);
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QAfterSortBy> thenByLicensePlateDesc() {
+  QueryBuilder<IsarUser, IsarUser, QAfterSortBy>
+      thenByOnboardingCompleteDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'licensePlate', Sort.desc);
+      return query.addSortBy(r'onboardingComplete', Sort.desc);
     });
   }
 
@@ -1628,10 +1505,9 @@ extension IsarUserQueryWhereDistinct
     });
   }
 
-  QueryBuilder<IsarUser, IsarUser, QDistinct> distinctByLicensePlate(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarUser, IsarUser, QDistinct> distinctByOnboardingComplete() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'licensePlate', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'onboardingComplete');
     });
   }
 
@@ -1688,9 +1564,9 @@ extension IsarUserQueryProperty
     });
   }
 
-  QueryBuilder<IsarUser, String, QQueryOperations> licensePlateProperty() {
+  QueryBuilder<IsarUser, bool, QQueryOperations> onboardingCompleteProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'licensePlate');
+      return query.addPropertyName(r'onboardingComplete');
     });
   }
 

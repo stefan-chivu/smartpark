@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:easy_park/models/address.dart';
+import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/services/auth.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/address_expansion_panel.dart';
+import 'package:easy_park/ui_components/car_expansion_panel.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
@@ -25,20 +27,30 @@ class _ProfilePageState extends State<ProfilePage> {
       TextEditingController(text: IsarService.isarUser.firstName);
   final TextEditingController _lastNameController =
       TextEditingController(text: IsarService.isarUser.lastName);
+  final TextEditingController _licensePlateController = TextEditingController();
   bool editable = false;
   late final Address homeAddress;
   late final Address workAddress;
-  late final List<AddressPanelItem> _data;
+  late final List<AddressPanelItem> _addresses;
+  final List<CarPanelItem> _cars = [];
 
   double widgetWidthRatio = 1.25;
   @override
   void initState() {
     super.initState();
-    homeAddress =
-        Address.fromJson(jsonDecode(IsarService.isarUser.homeAddress));
-    workAddress =
-        Address.fromJson(jsonDecode(IsarService.isarUser.workAddress));
-    _data = [
+    if (IsarService.isarUser.homeAddress.isNotEmpty) {
+      homeAddress =
+          Address.fromJson(jsonDecode(IsarService.isarUser.homeAddress));
+    } else {
+      homeAddress = Address.empty();
+    }
+    if (IsarService.isarUser.workAddress.isNotEmpty) {
+      workAddress =
+          Address.fromJson(jsonDecode(IsarService.isarUser.workAddress));
+    } else {
+      workAddress = Address.empty();
+    }
+    _addresses = [
       AddressPanelItem(
           address: workAddress,
           headerLeading: const Icon(Icons.work),
@@ -50,6 +62,10 @@ class _ProfilePageState extends State<ProfilePage> {
           headerTitle: const Text("Home Address"),
           isExpanded: false)
     ];
+
+    for (IsarCar car in IsarService.isarCars) {
+      _cars.add(CarPanelItem(car: car, isExpanded: false));
+    }
   }
 
   @override
@@ -110,11 +126,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: ExpansionPanelList(
                     expansionCallback: (int index, bool isExpanded) {
                       setState(() {
-                        _data[index].isExpanded = !isExpanded;
+                        _addresses[index].isExpanded = !isExpanded;
                       });
                     },
                     children:
-                        _data.map<ExpansionPanel>((AddressPanelItem item) {
+                        _addresses.map<ExpansionPanel>((AddressPanelItem item) {
                       return addressExpansionPanel(
                           item.isExpanded,
                           item.address,
@@ -141,20 +157,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                   IsarService.isarUser.firstName;
                               _lastNameController.text =
                                   IsarService.isarUser.lastName;
-                              _data[0].streetController.text =
+                              _addresses[0].streetController.text =
                                   workAddress.street;
-                              _data[0].cityController.text = workAddress.city;
-                              _data[0].regionController.text =
+                              _addresses[0].cityController.text =
+                                  workAddress.city;
+                              _addresses[0].regionController.text =
                                   workAddress.region;
-                              _data[0].countryController.text =
+                              _addresses[0].countryController.text =
                                   workAddress.country;
 
-                              _data[1].streetController.text =
+                              _addresses[1].streetController.text =
                                   homeAddress.street;
-                              _data[1].cityController.text = homeAddress.city;
-                              _data[1].regionController.text =
+                              _addresses[1].cityController.text =
+                                  homeAddress.city;
+                              _addresses[1].regionController.text =
                                   homeAddress.region;
-                              _data[1].countryController.text =
+                              _addresses[1].countryController.text =
                                   homeAddress.country;
                             }
                             editable = !editable;
@@ -175,6 +193,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         )),
                   ),
                   editable
+                      ? const Padding(padding: EdgeInsets.all(AppMargins.XS))
+                      : Container(),
+                  editable
                       ? Expanded(
                           child: ElevatedButton.icon(
                               onPressed: () async {
@@ -187,16 +208,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                 });
 
                                 Address newWorkAddress = Address(
-                                    _data[0].streetController.text,
-                                    _data[0].cityController.text,
-                                    _data[0].regionController.text,
-                                    _data[0].countryController.text);
+                                    _addresses[0].streetController.text,
+                                    _addresses[0].cityController.text,
+                                    _addresses[0].regionController.text,
+                                    _addresses[0].countryController.text);
 
                                 Address newHomeAddress = Address(
-                                    _data[1].streetController.text,
-                                    _data[1].cityController.text,
-                                    _data[1].regionController.text,
-                                    _data[1].countryController.text);
+                                    _addresses[1].streetController.text,
+                                    _addresses[1].cityController.text,
+                                    _addresses[1].regionController.text,
+                                    _addresses[1].countryController.text);
 
                                 IsarService.isarUser.firstName =
                                     _firstNameController.text;
@@ -226,14 +247,84 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-            const Padding(padding: EdgeInsets.all(AppMargins.XS)),
+            const Padding(padding: EdgeInsets.all(AppMargins.M)),
+            SizedBox(
+              width: MediaQuery.of(context).size.width / widgetWidthRatio,
+              child: TextField(
+                controller: TextEditingController(text: 'Your cars'),
+                enabled: false,
+              ),
+            ),
+            const Padding(padding: EdgeInsets.all(AppMargins.S)),
+            SizedBox(
+                width: MediaQuery.of(context).size.width / widgetWidthRatio,
+                child: ExpansionPanelList(
+                    expansionCallback: (int index, bool isExpanded) {
+                      setState(() {
+                        _cars[index].isExpanded = !isExpanded;
+                      });
+                    },
+                    children: _cars.map<ExpansionPanel>((CarPanelItem item) {
+                      return carExpansionPanel(
+                        context,
+                        item.isExpanded,
+                        item.car,
+                        editable,
+                        headerLeading: const Icon(
+                          Icons.info,
+                          color: AppColors.pineTree,
+                        ),
+                        headerTitle: Center(
+                          child: Text(
+                            item.car.licensePlate,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        headerTrailing: item.car.isElectric
+                            ? const Icon(
+                                Icons.electric_car_rounded,
+                                color: AppColors.emerald,
+                              )
+                            : const Icon(
+                                Icons.time_to_leave_rounded,
+                                color: AppColors.slateGray,
+                              ),
+                      );
+                    }).toList())),
+            const Padding(padding: EdgeInsets.all(AppMargins.S)),
+            ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.slateGray),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AddCarDialog(
+                          controller: _licensePlateController,
+                        );
+                      });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text(
+                  'Add',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )),
+            const TextField(
+              enabled: false,
+            ),
+            const Padding(padding: EdgeInsets.all(AppMargins.S)),
             SizedBox(
               width: MediaQuery.of(context).size.width / widgetWidthRatio,
               child:
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Expanded(
                     child: ElevatedButton.icon(
-                  icon: const Icon(Icons.exit_to_app),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.orangeRed),
+                  icon: const Icon(
+                    Icons.exit_to_app,
+                    color: Colors.black,
+                  ),
                   onPressed: () async {
                     await AuthService().signOut();
                     if (mounted) {
@@ -243,7 +334,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   label: const Text(
                     'Sign-out',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                 )),
               ]),

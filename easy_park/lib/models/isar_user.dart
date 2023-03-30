@@ -13,9 +13,9 @@ class IsarUser {
   bool isAdmin = false;
   String firstName;
   String lastName;
-  String licensePlate;
   String homeAddress;
   String workAddress;
+  bool onboardingComplete;
 
   IsarUser(
       {required this.uid,
@@ -23,7 +23,7 @@ class IsarUser {
       required this.isAdmin,
       required this.firstName,
       required this.lastName,
-      required this.licensePlate,
       required this.homeAddress,
-      required this.workAddress});
+      required this.workAddress,
+      required this.onboardingComplete});
 }

@@ -82,6 +82,7 @@ class _OnboardingAddressSelectorState extends State<OnboardingAddressSelector> {
               }
               try {
                 await SqlService.pushLocalUserData();
+                await SqlService.markOnboardingCompleted();
 
                 if (mounted) {
                   Navigator.pushNamed(context, '/');

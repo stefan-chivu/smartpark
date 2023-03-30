@@ -8,4 +8,6 @@ abstract class Constants {
       String.fromEnvironment('GOOGLE_MAPS_API_KEY');
   static final alNumRegExp = RegExp(r'^[a-zA-Z0-9]+$');
   static final nameRegExp = RegExp(r'^[a-zA-Z][a-zA-Z\-]*[a-zA-Z]$');
+  static const sqlTimeoutDuration = Duration(seconds: 5);
+  static const String sqlTimeoutMessage = 'SQL connection timed out';
 }

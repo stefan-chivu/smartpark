@@ -20,10 +20,10 @@ class _HomeWrapperState extends State<HomeWrapper> {
   @override
   Widget build(BuildContext context) {
     if (IsarService.isarUser.uid.isNotEmpty) {
-      if (IsarService.isarUser.licensePlate.isEmpty) {
-        return const OnboardingLicensePlate();
+      if (IsarService.isarUser.onboardingComplete) {
+        return const Home();
       }
-      return const Home();
+      return const OnboardingLicensePlate();
     } else {
       return const LoginPage();
     }

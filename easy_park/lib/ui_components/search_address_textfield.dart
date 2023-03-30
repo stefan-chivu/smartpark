@@ -48,9 +48,6 @@ class _SearchAddressTextFieldState extends State<SearchAddressTextField> {
                   CameraUpdate.newLatLngZoom(result.location!, 16.5));
             }
           });
-        } else {
-          // ignore: use_build_context_synchronously
-          Navigator.pushNamed(context, '/error');
         }
       },
     );
