@@ -378,10 +378,10 @@ class SqlService {
       var result = await pool.execute(
           "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
           {
-            "street": address.street ?? "",
-            "city": address.city ?? "",
-            "region": address.region ?? "",
-            "country": address.country ?? "",
+            "street": address.street,
+            "city": address.city,
+            "region": address.region,
+            "country": address.country,
           });
 
       result = await pool.execute(
@@ -438,7 +438,7 @@ class SqlService {
       String licensePlate,
       String homeAddress,
       String workAddress) async {
-    var result = await pool.execute(
+    await pool.execute(
         "INSERT INTO `Users` (`uid`, `email`, `is_admin`, `first_name`, `last_name`, `license_plate`, `home_address`, `work_address`) VALUES (:uid, :email, :is_admin, :first_name, :last_name, :license_plate, :home_address, :work_address)",
         {
           "uid": uid,

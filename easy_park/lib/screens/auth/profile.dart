@@ -142,22 +142,20 @@ class _ProfilePageState extends State<ProfilePage> {
                               _lastNameController.text =
                                   IsarService.isarUser.lastName;
                               _data[0].streetController.text =
-                                  workAddress.street ?? '';
-                              _data[0].cityController.text =
-                                  workAddress.city ?? '';
+                                  workAddress.street;
+                              _data[0].cityController.text = workAddress.city;
                               _data[0].regionController.text =
-                                  workAddress.region ?? '';
+                                  workAddress.region;
                               _data[0].countryController.text =
-                                  workAddress.country ?? '';
+                                  workAddress.country;
 
                               _data[1].streetController.text =
-                                  homeAddress.street ?? '';
-                              _data[1].cityController.text =
-                                  homeAddress.city ?? '';
+                                  homeAddress.street;
+                              _data[1].cityController.text = homeAddress.city;
                               _data[1].regionController.text =
-                                  homeAddress.region ?? '';
+                                  homeAddress.region;
                               _data[1].countryController.text =
-                                  homeAddress.country ?? '';
+                                  homeAddress.country;
                             }
                             editable = !editable;
                           });
@@ -271,9 +269,9 @@ class AddressPanelItem {
       required this.address,
       this.headerTitle,
       this.headerLeading}) {
-    streetController.text = address.street ?? '';
-    cityController.text = address.city ?? '';
-    regionController.text = address.region ?? '';
-    countryController.text = address.country ?? '';
+    streetController.text = address.street;
+    cityController.text = address.city;
+    regionController.text = address.region;
+    countryController.text = address.country;
   }
 }

@@ -45,9 +45,7 @@ class _AddSensorState extends State<AddSensor> {
   }
 
   Future<LocationInfo> getLocationInfo() async {
-    print("Fetching current location data");
     LocationData data = await LocationService.getCurrentLocation();
-    print("Location data acquired successfully");
 
     if ((data.latitude == null || data.longitude == null) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
