@@ -7,6 +7,7 @@ import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/services/constants.dart';
+import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -409,8 +410,8 @@ class SqlService {
       ResultSetRow data = result.rows.first;
       bool isAdmin = data.typedColByName<bool>("is_admin")!;
       String email = data.typedColByName<String>("email")!;
-      String firstName = data.typedColByName<String>("firstName") ?? '';
-      String lastName = data.typedColByName<String>("lastName") ?? '';
+      String firstName = data.typedColByName<String>("first_name") ?? '';
+      String lastName = data.typedColByName<String>("last_name") ?? '';
       String licensePlate = data.typedColByName<String>("license_plate") ?? '';
       String homeAddress = data.typedColByName<String>("home_address") ?? '';
       String workAddress = data.typedColByName<String>("work_address") ?? '';
@@ -459,5 +460,24 @@ class SqlService {
     // if (result.affectedRows.toInt() != 1) {
     //   throw Exception("Failed adding new user to database");
     // }
+  }
+
+  static Future<void> pushLocalUserData() async {
+    IsarUser isarUser = IsarService.isarUser;
+    await pool.execute(
+        "UPDATE `Users` SET license_plate = :license_plate WHERE uid = :uid LIMIT 1",
+        {"uid": isarUser.uid, "license_plate": isarUser.licensePlate});
+    await pool.execute(
+        "UPDATE `Users` SET first_name = :first_name WHERE uid = :uid LIMIT 1",
+        {"uid": isarUser.uid, "first_name": isarUser.firstName});
+    await pool.execute(
+        "UPDATE `Users` SET last_name = :last_name WHERE uid = :uid LIMIT 1",
+        {"uid": isarUser.uid, "last_name": isarUser.lastName});
+    await pool.execute(
+        "UPDATE `Users` SET home_address = :home_address WHERE uid = :uid LIMIT 1",
+        {"uid": isarUser.uid, "home_address": isarUser.homeAddress});
+    await pool.execute(
+        "UPDATE `Users` SET work_address = :work_address WHERE uid = :uid LIMIT 1",
+        {"uid": isarUser.uid, "work_address": isarUser.workAddress});
   }
 }

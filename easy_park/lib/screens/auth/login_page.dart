@@ -1,9 +1,9 @@
+import 'package:easy_park/services/auth.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
+import 'package:easy_park/ui_components/loading_snack_bar.dart';
+import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
-
-import '../../services/auth.dart';
-import '../../ui_components/ui_specs.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -72,6 +72,8 @@ class _LoginPageState extends State<LoginPage> {
               padding: const EdgeInsets.all(AppMargins.M),
               child: CustomButton(
                   onPressed: () async {
+                    showLoadingSnackBar(context, "Logging in...",
+                        color: AppColors.blueGreen, durationSeconds: 2);
                     if (_emailFormKey.currentState!.validate() &&
                         _passwordFormKey.currentState!.validate()) {
                       String result = await _auth.signInWithEmailAndPassword(

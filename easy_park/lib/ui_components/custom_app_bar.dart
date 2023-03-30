@@ -1,5 +1,4 @@
 import 'package:easy_park/screens/home/home.dart';
-import 'package:easy_park/services/auth.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/ui_components/menu_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
@@ -37,15 +36,6 @@ class CustomAppBar extends StatelessWidget with PreferredSizeWidget {
                   Navigator.pushNamed(context, '/add-sensor');
                 })
             : Container(),
-        const Padding(padding: EdgeInsets.all(AppMargins.XS)),
-        MenuButton(
-            icon: Icons.exit_to_app,
-            text: " Sign-out",
-            onTap: () async {
-              await AuthService().signOut();
-              // ignore: use_build_context_synchronously
-              Navigator.pushNamed(context, '/');
-            }),
         const Padding(padding: EdgeInsets.all(AppMargins.XS))
       ],
     );

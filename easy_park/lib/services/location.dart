@@ -44,10 +44,10 @@ class LocationService {
       List<geocodingpkg.Placemark> placemarks =
           await geocodingpkg.placemarkFromCoordinates(latitude, longitude);
       Address address = Address(
-          placemarks.first.street,
-          placemarks.first.locality,
-          placemarks.first.administrativeArea,
-          placemarks.first.country);
+          placemarks.first.street ?? '',
+          placemarks.first.locality ?? '',
+          placemarks.first.administrativeArea ?? '',
+          placemarks.first.country ?? '');
       return address;
     } catch (e) {
       return Future.error(e.toString());

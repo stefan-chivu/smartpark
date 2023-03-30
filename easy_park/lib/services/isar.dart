@@ -50,8 +50,15 @@ class IsarService {
   }
 
   static Future<void> setUser(IsarUser user) async {
+    isarUser = user;
     await isar.writeTxn(() async {
       await isar.isarUsers.put(user);
+    });
+  }
+
+  static Future<void> updateUser() async {
+    await isar.writeTxn(() async {
+      await isar.isarUsers.put(isarUser);
     });
   }
 
