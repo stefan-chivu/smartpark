@@ -84,13 +84,9 @@ class SpotListData {
 class SpotProviderInput {
   BuildContext? context;
   LatLng? position;
-  double sensorRange;
+  double sensorRangeKm;
   List<ParkingInfo>? spots;
 
-  // TODO: some of these might not need the required param
   SpotProviderInput(
-      {required this.context,
-      required this.position,
-      required this.sensorRange,
-      required this.spots});
+      {this.context, this.position, this.sensorRangeKm = 1, this.spots});
 }

@@ -4,6 +4,7 @@ import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
+import 'package:easy_park/ui_components/loading_snack_bar.dart';
 import 'package:easy_park/ui_components/search_address_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +21,7 @@ class Home extends ConsumerStatefulWidget {
 typedef MarkerUpdateAction = Marker Function(Marker marker);
 
 class _HomeState extends ConsumerState<Home> {
-  SpotProviderInput providerInput = SpotProviderInput(
-      context: null, position: null, sensorRange: 1, spots: null);
+  SpotProviderInput providerInput = SpotProviderInput();
   bool showRefresh = false;
   LatLng? tmpPosition;
   final TextEditingController _controller = TextEditingController();
@@ -55,19 +55,9 @@ class _HomeState extends ConsumerState<Home> {
                 Address newAddress = await LocationService.addressFromLatLng(
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    duration: const Duration(seconds: 2),
-                    content: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          CircularProgressIndicator(),
-                          SizedBox(
-                            width: AppMargins.M,
-                          ),
-                          Text("Finding parking spots around here...")
-                        ]),
-                    backgroundColor: AppColors.blueGreen,
-                  ));
+                  showLoadingSnackBar(
+                      context, "Finding parking spots around here...",
+                      color: AppColors.blueGreen, durationSeconds: 2);
                 }
                 setState(() {
                   providerInput.position = tmpPosition;
@@ -81,7 +71,10 @@ class _HomeState extends ConsumerState<Home> {
                     content: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Found ${providerData.spots.length} spots!"),
+                          Text(
+                            "Found ${providerData.spots.length} spots!",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(
                             width: AppMargins.XS,
                           ),
@@ -129,6 +122,7 @@ class _HomeState extends ConsumerState<Home> {
               child: SizedBox(
                   width: MediaQuery.of(context).size.width / 1.3,
                   child: SearchAddressTextField(
+                    label: 'Search...',
                     controller: _controller,
                     mapController: _mapController,
                   )),

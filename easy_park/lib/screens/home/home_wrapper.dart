@@ -1,4 +1,5 @@
 import 'package:easy_park/screens/auth/login_page.dart';
+import 'package:easy_park/screens/auth/onboarding_license_plate.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:flutter/material.dart';
 import 'home.dart';
@@ -18,8 +19,11 @@ class _HomeWrapperState extends State<HomeWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    if (IsarService.getUid() != "") {
-      return const Home();
+    if (IsarService.isarUser.uid.isNotEmpty) {
+      if (IsarService.isarUser.onboardingComplete) {
+        return const Home();
+      }
+      return const OnboardingLicensePlate();
     } else {
       return const LoginPage();
     }

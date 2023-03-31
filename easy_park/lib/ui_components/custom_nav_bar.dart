@@ -19,13 +19,29 @@ class CustomNavBar extends StatelessWidget {
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.white,
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-        BottomNavigationBarItem(icon: Icon(Icons.payment), label: "Pay"),
-        BottomNavigationBarItem(icon: Icon(Icons.list), label: "Spots")
+        BottomNavigationBarItem(
+            icon: Icon(Icons.person_pin),
+            label: "Profile",
+            backgroundColor: AppColors.slateGray),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: "History",
+            backgroundColor: AppColors.slateGray),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.payment),
+            label: "Pay",
+            backgroundColor: AppColors.slateGray),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: "Spots",
+            backgroundColor: AppColors.slateGray)
       ],
       onTap: ((index) {
         switch (index) {
           case 0:
+            Navigator.pushNamed(context, '/profile');
+            break;
+          case 1:
             showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
@@ -41,7 +57,7 @@ class CustomNavBar extends StatelessWidget {
               ),
             );
             break;
-          case 1:
+          case 2:
             showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
@@ -57,7 +73,7 @@ class CustomNavBar extends StatelessWidget {
               ),
             );
             break;
-          case 2:
+          case 3:
             Navigator.pushNamed(
               context,
               '/spot-list',

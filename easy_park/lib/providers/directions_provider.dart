@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-//TODO: see if address can be required somewhere or if it should be removed
 final directionsProvider = FutureProvider.autoDispose
     .family<DirectionsInformation, DirectionsInput>((ref, input) async {
   final locationData = await LocationService.getCurrentLocation();

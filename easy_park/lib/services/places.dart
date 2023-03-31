@@ -64,6 +64,7 @@ class AddressSearch extends SearchDelegate<Suggestion> {
                           .locationFromAddress(crtSuggestion.description);
                       crtSuggestion.location =
                           LatLng(locations[0].latitude, locations[0].longitude);
+                      // ignore: use_build_context_synchronously
                       close(context, crtSuggestion);
                     },
                   ),

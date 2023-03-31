@@ -6,9 +6,13 @@ import 'package:uuid/uuid.dart';
 class SearchAddressTextField extends StatefulWidget {
   final TextEditingController controller;
   final GoogleMapController? mapController;
+  final String label;
 
   const SearchAddressTextField(
-      {super.key, required this.controller, required this.mapController});
+      {super.key,
+      required this.controller,
+      required this.mapController,
+      required this.label});
 
   @override
   State<SearchAddressTextField> createState() => _SearchAddressTextFieldState();
@@ -23,7 +27,7 @@ class _SearchAddressTextFieldState extends State<SearchAddressTextField> {
       decoration: InputDecoration(
         fillColor: Colors.white,
         filled: true,
-        labelText: 'Search...',
+        labelText: widget.label,
         border: OutlineInputBorder(
           borderSide: const BorderSide(width: 1), //<-- SEE HERE
           borderRadius: BorderRadius.circular(20.0),
@@ -44,9 +48,6 @@ class _SearchAddressTextFieldState extends State<SearchAddressTextField> {
                   CameraUpdate.newLatLngZoom(result.location!, 16.5));
             }
           });
-        } else {
-          // ignore: use_build_context_synchronously
-          Navigator.pushNamed(context, '/error');
         }
       },
     );

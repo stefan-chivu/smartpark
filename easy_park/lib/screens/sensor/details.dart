@@ -19,7 +19,6 @@ class SpotDetails extends StatelessWidget {
         SpotStatusListTile(
           spot: spot,
         ),
-        // TODO: Add optional zone name & info
         ListTile(
           leading: const Icon(Icons.access_time),
           title: const Text("Timetable"),
