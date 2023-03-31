@@ -18,8 +18,7 @@ class ParkingSpotList extends ConsumerStatefulWidget {
 }
 
 class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
-  SpotProviderInput providerInput = SpotProviderInput(
-      context: null, position: null, sensorRange: 1, spots: null);
+  SpotProviderInput providerInput = SpotProviderInput();
   LatLng? position;
   List<ParkingInfo>? spots;
 

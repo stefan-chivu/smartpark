@@ -21,8 +21,7 @@ class Home extends ConsumerStatefulWidget {
 typedef MarkerUpdateAction = Marker Function(Marker marker);
 
 class _HomeState extends ConsumerState<Home> {
-  SpotProviderInput providerInput = SpotProviderInput(
-      context: null, position: null, sensorRange: 1, spots: null);
+  SpotProviderInput providerInput = SpotProviderInput();
   bool showRefresh = false;
   LatLng? tmpPosition;
   final TextEditingController _controller = TextEditingController();
