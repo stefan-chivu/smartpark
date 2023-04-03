@@ -1,5 +1,6 @@
 import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/models/isar_user.dart';
+import 'package:easy_park/services/constants.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,11 +36,13 @@ class AuthService {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        return 'An user with this e-mail/password was not found';
+        return 'An user with this e-mail/password was not found.';
       } else if (e.code == 'wrong-password') {
-        return 'An user with this e-mail/password was not found';
+        return 'An user with this e-mail/password was not found.';
       } else if (e.code == 'sql-error') {
-        return 'We had some trouble signing you in, please try again';
+        return 'We had some trouble signing you in, please try again.';
+      } else {
+        return 'There was a problem trying to sign you in. Please check your internet connection.';
       }
     }
     return "success";
@@ -49,8 +52,9 @@ class AuthService {
   Future<String> registerWithEmailAndPassword(
       String email, String password) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+      UserCredential result = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .timeout(Constants.timeoutDuration);
       // user will be saved in provider
       User? user = result.user;
       if (user != null && user.email != null) {
