@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:easy_park/services/constants.dart';
@@ -8,6 +9,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AddressSearch extends SearchDelegate<Suggestion> {
   String sessionToken;
+  Timer? _timer;
+  final Duration searchDelay = const Duration(milliseconds: 1500);
+  late Completer<List<Suggestion>> _completer;
   AddressSearch({required this.sessionToken});
 
   @override
@@ -41,8 +45,16 @@ class AddressSearch extends SearchDelegate<Suggestion> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    if (_timer?.isActive ?? false) _timer!.cancel();
+    _completer = Completer<List<Suggestion>>();
+    _timer = Timer(searchDelay, () async {
+      print("Waited ${searchDelay.inMilliseconds} ms");
+      final List<Suggestion> suggestions =
+          await PlaceApiProvider.fetchSuggestions(query, 'en', sessionToken);
+      _completer.complete(suggestions);
+    });
     return FutureBuilder(
-      future: PlaceApiProvider.fetchSuggestions(query, 'en', sessionToken),
+      future: _completer.future,
       builder: (context, AsyncSnapshot<List<Suggestion>> snapshot) => query ==
               ''
           ? Container(
