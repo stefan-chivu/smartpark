@@ -20,12 +20,16 @@ class CustomNavBar extends StatelessWidget {
       unselectedItemColor: Colors.white,
       items: const [
         BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+            backgroundColor: AppColors.slateGray),
+        BottomNavigationBarItem(
             icon: Icon(Icons.person_pin),
-            label: "Profile",
+            label: "Profile ",
             backgroundColor: AppColors.slateGray),
         BottomNavigationBarItem(
             icon: Icon(Icons.history),
-            label: "History",
+            label: " History",
             backgroundColor: AppColors.slateGray),
         BottomNavigationBarItem(
             icon: Icon(Icons.payment),
@@ -39,12 +43,15 @@ class CustomNavBar extends StatelessWidget {
       onTap: ((index) {
         switch (index) {
           case 0:
-            Navigator.pushNamed(context, '/profile');
+            Navigator.pushNamed(context, '/');
             break;
           case 1:
-            Navigator.pushNamed(context, '/history');
+            Navigator.pushNamed(context, '/profile');
             break;
           case 2:
+            Navigator.pushNamed(context, '/history');
+            break;
+          case 3:
             showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
@@ -60,7 +67,7 @@ class CustomNavBar extends StatelessWidget {
               ),
             );
             break;
-          case 3:
+          case 4:
             Navigator.pushNamed(
               context,
               '/spot-list',

@@ -1,7 +1,6 @@
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/spot_status_listtile.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
@@ -37,7 +36,6 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
 
     return providerData.when(data: (providerData) {
       return Scaffold(
-          appBar: const CustomAppBar(showHome: true),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.slateGray,
             onPressed: () async {

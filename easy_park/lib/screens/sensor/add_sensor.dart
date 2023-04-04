@@ -5,7 +5,6 @@ import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
@@ -101,7 +100,6 @@ class _AddSensorState extends State<AddSensor> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const CustomAppBar(showHome: true),
         body: isWaiting
             ? const Center(
                 child: CircularProgressIndicator(),

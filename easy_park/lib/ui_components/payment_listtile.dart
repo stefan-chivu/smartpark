@@ -1,5 +1,5 @@
 import 'package:easy_park/models/parking_history.dart';
-import 'package:easy_park/ui_components/menu_button.dart';
+import 'package:easy_park/ui_components/label_icon_button.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -45,8 +45,9 @@ class PaymentListTile extends StatelessWidget {
       ),
       trailing: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-            width: AppMargins.L,
-            child: MenuButton(
+            width: AppMargins.XL,
+            child: LabelIconButton(
+              textColor: Colors.grey,
               text: 'Invoice',
               icon: Icons.save_alt,
               onTap: () {

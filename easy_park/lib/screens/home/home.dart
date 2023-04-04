@@ -2,7 +2,6 @@ import 'package:easy_park/models/address.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/services/location.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/loading_snack_bar.dart';
 import 'package:easy_park/ui_components/search_address_textfield.dart';
@@ -10,6 +9,7 @@ import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -41,7 +41,6 @@ class _HomeState extends ConsumerState<Home> {
 
     return providerData.when(data: (providerData) {
       return Scaffold(
-          appBar: const CustomAppBar(showHome: true),
           floatingActionButton: AnimatedOpacity(
             duration: const Duration(milliseconds: 250),
             opacity: showRefresh ? 1.0 : 0.0,
@@ -71,6 +70,8 @@ class _HomeState extends ConsumerState<Home> {
               FloatingActionButtonLocation.miniCenterFloat,
           body: Stack(alignment: AlignmentDirectional.topStart, children: [
             GoogleMap(
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
               mapType: MapType.normal,
               initialCameraPosition: CameraPosition(
                   target: LatLng(providerData.location.latitude!,
@@ -94,16 +95,46 @@ class _HomeState extends ConsumerState<Home> {
                       providerData.location.longitude!)),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppMargins.S, vertical: AppMargins.S),
-              child: SizedBox(
-                  width: MediaQuery.of(context).size.width / 1.3,
-                  child: SearchAddressTextField(
-                    label: 'Search...',
-                    controller: _controller,
-                    mapController: _mapController,
-                  )),
-            )
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppMargins.S, vertical: AppMargins.L),
+                child: SearchAddressTextField(
+                  label: 'Search...',
+                  controller: _controller,
+                  mapController: _mapController,
+                )),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppMargins.S, vertical: AppMargins.L),
+                child: Material(
+                  shape: const CircleBorder(side: BorderSide.none),
+                  elevation: 8,
+                  child: Ink(
+                    decoration: const ShapeDecoration(
+                      color: AppColors.slateGray,
+                      shape: CircleBorder(),
+                    ),
+                    child: IconButton(
+                      color: Colors.white,
+                      onPressed: () async {
+                        if (_mapController != null) {
+                          LocationData userLocation =
+                              await LocationService.getCurrentLocation();
+                          _mapController!.animateCamera(CameraUpdate.newLatLng(
+                              LatLng(userLocation.latitude!,
+                                  userLocation.longitude!)));
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.my_location_rounded,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ]),
           bottomNavigationBar: CustomNavBar(
               position: tmpPosition,

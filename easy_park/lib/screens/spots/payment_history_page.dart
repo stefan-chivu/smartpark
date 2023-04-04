@@ -1,6 +1,5 @@
 import 'package:easy_park/providers/payment_history_provider.dart';
 import 'package:easy_park/screens/error.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/loading_snack_bar.dart';
 import 'package:easy_park/ui_components/payment_listtile.dart';
@@ -23,7 +22,6 @@ class _ParkingHistoryPageState extends ConsumerState<ParkingHistoryPage> {
 
     return providerData.when(data: (providerData) {
       return Scaffold(
-          appBar: const CustomAppBar(showHome: true),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.slateGray,
             onPressed: () async {
