@@ -6,6 +6,7 @@ import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
 import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/models/isar_user.dart';
+import 'package:easy_park/models/parking_history.dart';
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
@@ -41,9 +42,9 @@ class SqlService {
      by only displaying available spots instead of not fetching them at all
      some logic such as 'soon-to-be freed' spots might be added 
 */
-  static Future<List<ParkingInfo>> getParkingSpotsAroundPosition(
+  static Future<List<SpotInfo>> getParkingSpotsAroundPosition(
       double latitude, double longitude, double rangeKm) async {
-    List<ParkingInfo> parkingInfo = [];
+    List<SpotInfo> parkingInfo = [];
     LatLongRangeLimits limits =
         LocationService.getPointRadiusKm(latitude, longitude, rangeKm);
     try {
@@ -74,7 +75,7 @@ class SqlService {
 
         SpotState spotState = await getSensorStatus(sensorId);
 
-        parkingInfo.add((ParkingInfo(sensorId, position.latitude,
+        parkingInfo.add((SpotInfo(sensorId, position.latitude,
             position.longitude, address, zone, spotState)));
       }
     } catch (e) {
@@ -148,7 +149,7 @@ class SqlService {
     }
   }
 
-  static Future<ParkingInfo?> getNearestAvailableParkingSpotWithinRange(
+  static Future<SpotInfo?> getNearestAvailableParkingSpotWithinRange(
       double latitude, double longitude, double rangeKm) async {
     LatLongRangeLimits limits =
         LocationService.getPointRadiusKm(latitude, longitude, rangeKm);
@@ -182,7 +183,7 @@ class SqlService {
         Address address = await getAddressById(addressId);
         Zone zone = await getZoneById(zoneId);
 
-        return (ParkingInfo(sensorId, position.latitude, position.longitude,
+        return (SpotInfo(sensorId, position.latitude, position.longitude,
             address, zone, spotState));
       }
     } catch (e) {
@@ -493,15 +494,20 @@ class SqlService {
 
     try {
       var result = await pool.execute(
-          "SELECT license_plate, is_electric FROM `Cars` WHERE owner = :uid", {
-        "uid": uid,
-      }).timeout(Constants.sqlTimeoutDuration,
+          "SELECT car_id, license_plate, is_electric FROM `Cars` WHERE owner = :uid",
+          {
+            "uid": uid,
+          }).timeout(Constants.sqlTimeoutDuration,
           onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
       for (ResultSetRow row in result.rows) {
+        int? carId = row.typedColByName<int>("car_id");
         String licensePlate = row.typedColByName<String>("license_plate") ?? '';
         bool isElectric = row.typedColByName<bool>("is_electric")!;
         cars.add(IsarCar(
-            ownerUid: uid, licensePlate: licensePlate, isElectric: isElectric));
+            carId: carId,
+            ownerUid: uid,
+            licensePlate: licensePlate,
+            isElectric: isElectric));
       }
     } catch (e) {
       return null;
@@ -605,5 +611,90 @@ class SqlService {
         }).timeout(Constants.sqlTimeoutDuration,
         onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
     await IsarService.deleteUserCar(car);
+  }
+
+  static Future<List<ParkingPayment>> getUserParkingHistory() async {
+    List<ParkingPayment> parkingHistoryList = [];
+    List<IsarCar> cars = await getUserCars(IsarService.isarUser.uid) ?? [];
+
+    for (IsarCar car in cars) {
+      if (car.carId == null) {
+        car.carId = await getCarIdByLicensePlate(car.licensePlate);
+        if (car.carId == null) {
+          // This case means the car is not added in SQL
+          // so an error might have occured somewhere
+          continue;
+        }
+      }
+
+      var result = await pool.execute(
+          "SELECT * FROM `Payments` WHERE car_id = :car_id",
+          {"car_id": car.carId});
+
+      for (ResultSetRow row in result.rows) {
+        int paymentId = row.typedColByName<int>('payment_id')!;
+        int sensorId = row.typedColByName<int>('sensor_id')!;
+        double totalSum = row.typedColByName<double>('total_sum')!;
+        String timestamp = row.typedColByName<String>('timestamp')!;
+        String parkingStart = row.typedColByName<String>('parking_start')!;
+        String parkingEnd = row.typedColByName<String>('parking_end')!;
+
+        SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+        if (spot != null) {
+          parkingHistoryList.add(ParkingPayment(
+              id: paymentId,
+              spot: spot,
+              car: car,
+              totalSum: totalSum,
+              timestamp: DateTime.parse(timestamp),
+              parkingStart: DateTime.parse(parkingStart),
+              parkingEnd: DateTime.parse(parkingEnd)));
+        }
+      }
+    }
+
+    return parkingHistoryList;
+  }
+
+  static Future<int?> getCarIdByLicensePlate(String licensePlate) async {
+    try {
+      var result = await pool.execute(
+          "SELECT car_id FROM `Cars` WHERE license_plate = :license_plate",
+          {"license_plate": licensePlate});
+      return result.rows.first.typedColByName<int>('car_id');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<SpotInfo?> getSpotById(int sensorId,
+      {bool fetchState = true}) async {
+    try {
+      var result = await pool.execute(
+          "SELECT * FROM Sensors WHERE sensor_id = :sensor_id", {
+        "sensor_id": sensorId,
+      }).timeout(Constants.sqlTimeoutDuration,
+          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+
+      var row = result.rows.first;
+      double lat = row.typedColByName<double>("latitude")!;
+      double long = row.typedColByName<double>("longitude")!;
+      int addressId = row.typedColByName<int>("address_id")!;
+      int zoneId = row.typedColByName<int>("zone_id")!;
+
+      LatLng position = LatLng(lat, long);
+
+      Address address = await getAddressById(addressId);
+      Zone zone = await getZoneById(zoneId);
+
+      SpotState spotState =
+          fetchState ? await getSensorStatus(sensorId) : SpotState.unknown;
+
+      return ((SpotInfo(sensorId, position.latitude, position.longitude,
+          address, zone, spotState)));
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
   }
 }

@@ -7,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
 class SpotStatusListTile extends StatelessWidget {
-  final ParkingInfo spot;
+  final SpotInfo spot;
   final LocationData? location;
   const SpotStatusListTile({super.key, required this.spot, this.location});
 
@@ -88,6 +88,7 @@ class SpotStatusListTile extends StatelessWidget {
               spot.state == SpotState.unknown ||
               spot.state == SpotState.freeingSoon)
             FloatingActionButton.extended(
+              heroTag: UniqueKey(),
               isExtended: true,
               elevation: 0,
               backgroundColor: spotColor,

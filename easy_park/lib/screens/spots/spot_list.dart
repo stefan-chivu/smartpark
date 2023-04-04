@@ -20,7 +20,7 @@ class ParkingSpotList extends ConsumerStatefulWidget {
 class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
   SpotProviderInput providerInput = SpotProviderInput();
   LatLng? position;
-  List<ParkingInfo>? spots;
+  List<SpotInfo>? spots;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,6 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
             backgroundColor: AppColors.slateGray,
             onPressed: () async {
               setState(() {
-                // TODO: check state update
                 ref.invalidate(spotProvider(providerInput));
 
                 if (mounted) {
@@ -67,7 +66,7 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
           body: ListView.separated(
             itemCount: providerData.spots.length,
             itemBuilder: (context, index) {
-              ParkingInfo spot = providerData.spots[index];
+              SpotInfo spot = providerData.spots[index];
               if (spot.state != SpotState.occupied) {
                 return SpotStatusListTile(
                   spot: spot,

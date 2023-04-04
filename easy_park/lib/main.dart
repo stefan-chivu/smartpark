@@ -3,6 +3,7 @@ import 'package:easy_park/screens/auth/profile.dart';
 import 'package:easy_park/screens/auth/register_page.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/screens/sensor/add_sensor.dart';
+import 'package:easy_park/screens/spots/payment_history_page.dart';
 import 'package:easy_park/screens/spots/spot_list.dart';
 import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/location.dart';
@@ -40,11 +41,12 @@ class MyApp extends StatelessWidget {
         ),
         routes: {
           '/': (context) => const HomeWrapper(),
-          '/error': (context) => const ErrorPage(),
-          '/login': (context) => const LoginPage(),
-          '/register': (context) => const RegisterPage(),
           '/add-sensor': (context) => const AddSensor(),
+          '/error': (context) => const ErrorPage(),
+          '/history': (context) => const ParkingHistoryPage(),
+          '/login': (context) => const LoginPage(),
           '/profile': (context) => const ProfilePage(),
+          '/register': (context) => const RegisterPage(),
           '/spot-list': (context) => const ParkingSpotList(),
         });
   }

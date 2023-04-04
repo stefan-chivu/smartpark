@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomNavBar extends StatelessWidget {
   final LatLng? position;
-  final List<ParkingInfo>? spots;
+  final List<SpotInfo>? spots;
   const CustomNavBar({super.key, this.position, this.spots});
 
   @override
@@ -42,20 +42,7 @@ class CustomNavBar extends StatelessWidget {
             Navigator.pushNamed(context, '/profile');
             break;
           case 1:
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: const Text('Parking history'),
-                actions: <TextButton>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  )
-                ],
-              ),
-            );
+            Navigator.pushNamed(context, '/history');
             break;
           case 2:
             showDialog(

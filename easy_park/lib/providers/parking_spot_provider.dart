@@ -2,6 +2,7 @@ import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/screens/sensor/details.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
+import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,6 +16,29 @@ final spotProvider =
       await SqlService.getParkingSpotsAroundPosition(
           input.position!.latitude, input.position!.longitude, 1);
 
+  if (input.context != null) {
+    int spotNo = parkingSpots
+        .where((element) => element.state != SpotState.occupied)
+        .length;
+    ScaffoldMessenger.of(input.context!).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 5),
+      content: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(
+          "Found $spotNo spots!",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(
+          width: AppMargins.XS,
+        ),
+        const Icon(
+          Icons.local_parking_outlined,
+          color: AppColors.emerald,
+        ),
+      ]),
+      backgroundColor: AppColors.pineTree,
+    ));
+  }
+
   return SpotListData(
       location: locationData,
       searchPosition: input.position!,
@@ -22,13 +46,13 @@ final spotProvider =
 });
 
 Set<Marker> getMarkers(
-    BuildContext context, List<ParkingInfo>? spots, LatLng location) {
+    BuildContext context, List<SpotInfo>? spots, LatLng location) {
   if (spots == null) {
     return {};
   }
 
   Set<Marker> markers = {};
-  for (ParkingInfo spot in spots) {
+  for (SpotInfo spot in spots) {
     markers.add(Marker(
         markerId: MarkerId(spot.sensorId.toString()),
         position: LatLng(spot.latitude, spot.longitude), //position of marker
@@ -72,7 +96,7 @@ BitmapDescriptor getMarkerIcon(SpotState state) {
 
 class SpotListData {
   LatLng searchPosition;
-  List<ParkingInfo> spots;
+  List<SpotInfo> spots;
   LocationData location;
 
   SpotListData(
@@ -85,7 +109,7 @@ class SpotProviderInput {
   BuildContext? context;
   LatLng? position;
   double sensorRangeKm;
-  List<ParkingInfo>? spots;
+  List<SpotInfo>? spots;
 
   SpotProviderInput(
       {this.context, this.position, this.sensorRangeKm = 1, this.spots});

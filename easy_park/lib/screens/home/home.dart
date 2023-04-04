@@ -37,7 +37,6 @@ class _HomeState extends ConsumerState<Home> {
 
   @override
   Widget build(BuildContext context) {
-    providerInput.context = context;
     final providerData = ref.watch(spotProvider(providerInput));
 
     return providerData.when(data: (providerData) {
@@ -50,8 +49,7 @@ class _HomeState extends ConsumerState<Home> {
               isExtended: true,
               backgroundColor: Colors.blueGrey,
               onPressed: () async {
-                // ignore: unused_result
-                ref.refresh(spotProvider(providerInput));
+                ref.invalidate(spotProvider(providerInput));
                 Address newAddress = await LocationService.addressFromLatLng(
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
@@ -60,32 +58,11 @@ class _HomeState extends ConsumerState<Home> {
                       color: AppColors.blueGreen, durationSeconds: 2);
                 }
                 setState(() {
+                  providerInput.context = context;
                   providerInput.position = tmpPosition;
                   showRefresh = false;
                   _controller.text = newAddress.toString();
                 });
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    duration: const Duration(seconds: 5),
-                    content: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Found ${providerData.spots.length} spots!",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            width: AppMargins.XS,
-                          ),
-                          const Icon(
-                            Icons.local_parking_outlined,
-                            color: AppColors.emerald,
-                          ),
-                        ]),
-                    backgroundColor: AppColors.pineTree,
-                  ));
-                }
               },
               label: const Text("Search this area"),
             ),

@@ -86,7 +86,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
                       if (status == SpotState.occupied) {
                         bool found = false;
-                        ParkingInfo? newSensor;
+                        SpotInfo? newSensor;
                         // if the sensor that the user was currently going to gets occupied,
                         // route the user to the nearest sensor within a 330m, 660m, 990m range
                         for (double searchArea = 0.33;
