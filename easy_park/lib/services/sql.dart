@@ -97,18 +97,16 @@ class SqlService {
       bool occupied = data.typedColByName<bool>("occupied")!;
 
       var reservedQuery = await pool.execute(
-          "SELECT reserved FROM Sensors WHERE sensor_id = :sensorId", {
+          "SELECT * FROM Reservations WHERE spot_id = :sensorId", {
         "sensorId": sensorId
       }).timeout(Constants.sqlTimeoutDuration,
           onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
 
-      data = reservedQuery.rows.first;
-      bool reserved = data.typedColByName<bool>("reserved")!;
       if (occupied) {
         return SpotState.occupied;
       }
 
-      if (reserved) {
+      if (reservedQuery.rows.isNotEmpty) {
         return SpotState.reserved;
       }
 
@@ -515,17 +513,23 @@ class SqlService {
     return cars;
   }
 
-  static Future<void> reserveSpot(String uid, int spotId) async {
-    // TODO: implement reservation mechanism; NO-OP for now
-    // var result = await pool.execute(
-    //     "UPDATE `Sensors` SET (`reserved_by`, `reserved`) VALUES (:uid, :)", {
-    //   "uid": uid,
-    //   "reserved": 1
-    // }).timeout(Constants.sqlTimeoutDuration,
-    //     onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-    // if (result.affectedRows.toInt() != 1) {
-    //   throw Exception("Failed adding new user to database");
-    // }
+  static Future<void> reserveSpot(int spotId) async {
+    var result = await pool.execute(
+        "INSERT INTO `Reservations` (`spot_id`, `reserved_by`) VALUES (:spot_id, :uid)",
+        {
+          "spot_id": spotId,
+          "uid": IsarService.isarUser.uid,
+        }).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+  }
+
+  static Future<void> clearSpotReservation(int spotId) async {
+    var result = await pool.execute(
+        "DELETE FROM `Reservations` WHERE `spot_id` = :spot_id", {
+      "spot_id": spotId,
+      "uid": IsarService.isarUser.uid,
+    }).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
   }
 
   static Future<void> markOnboardingCompleted() async {

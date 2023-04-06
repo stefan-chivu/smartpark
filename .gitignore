@@ -20,4 +20,6 @@ doc/api/
 *.js.deps
 *.js.map
 *.env
-easy_park/.vscode/launch.json
+*/.vscode/launch.json
+*/android/gradle.properties
+*/android/app/src/main/res/values/strings.xml
