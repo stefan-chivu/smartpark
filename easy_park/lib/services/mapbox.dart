@@ -9,6 +9,15 @@ class MapboxService {
   static void registerRouteListener(BuildContext context, SpotInfo spot) {
     MapBoxNavigation.instance.registerRouteEventListener((value) async {
       switch (value.eventType) {
+        case MapBoxEvent.route_build_cancelled:
+        case MapBoxEvent.failed_to_reroute:
+        case MapBoxEvent.navigation_cancelled:
+        case MapBoxEvent.route_build_failed:
+        case MapBoxEvent.navigation_finished:
+          print("Clearing reservation for spot ${spot.sensorId}");
+          MapBoxNavigation.instance.finishNavigation();
+          await SqlService.clearSpotReservation(spot.sensorId);
+          break;
         case MapBoxEvent.on_arrival:
           print("Arrived; Clearing reservation for spot ${spot.sensorId}");
           MapBoxNavigation.instance.finishNavigation();
