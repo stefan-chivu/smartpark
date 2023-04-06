@@ -1,17 +1,16 @@
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/screens/sensor/details.dart';
-import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 final spotProvider =
     FutureProvider.family<SpotListData, SpotProviderInput>((ref, input) async {
-  final locationData = await LocationService.getCurrentLocation();
-  input.position ??= LatLng(locationData.latitude!, locationData.longitude!);
+  final locationData = await Geolocator.getCurrentPosition();
+  input.position ??= LatLng(locationData.latitude, locationData.longitude);
   final parkingSpots = input.spots ??
       await SqlService.getParkingSpotsAroundPosition(
           input.position!.latitude, input.position!.longitude, 1);
@@ -97,7 +96,7 @@ BitmapDescriptor getMarkerIcon(SpotState state) {
 class SpotListData {
   LatLng searchPosition;
   List<SpotInfo> spots;
-  LocationData location;
+  Position location;
 
   SpotListData(
       {required this.location,

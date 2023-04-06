@@ -8,8 +8,8 @@ import 'package:easy_park/ui_components/search_address_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -119,11 +119,11 @@ class _HomeState extends ConsumerState<Home> {
                       color: Colors.white,
                       onPressed: () async {
                         if (_mapController != null) {
-                          LocationData userLocation =
-                              await LocationService.getCurrentLocation();
+                          Position userLocation =
+                              await Geolocator.getCurrentPosition();
                           _mapController!.animateCamera(CameraUpdate.newLatLng(
-                              LatLng(userLocation.latitude!,
-                                  userLocation.longitude!)));
+                              LatLng(userLocation.latitude,
+                                  userLocation.longitude)));
                         }
                       },
                       icon: const Icon(
