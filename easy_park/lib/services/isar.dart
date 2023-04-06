@@ -71,6 +71,7 @@ class IsarService {
       await isar.isarCars.filter().ownerUidEqualTo(isarUser.uid).deleteAll();
       await isar.isarUsers.delete(isarUser.id);
     });
+    isarCars = [];
     await initUser();
   }
 
