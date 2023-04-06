@@ -74,8 +74,8 @@ class _HomeState extends ConsumerState<Home> {
               mapToolbarEnabled: false,
               mapType: MapType.normal,
               initialCameraPosition: CameraPosition(
-                  target: LatLng(providerData.location.latitude!,
-                      providerData.location.longitude!),
+                  target: LatLng(providerData.location.latitude,
+                      providerData.location.longitude),
                   zoom: 18),
               onMapCreated: (controller) => _mapController = controller,
               onCameraMoveStarted: () {
@@ -91,8 +91,8 @@ class _HomeState extends ConsumerState<Home> {
               markers: getMarkers(
                   context,
                   providerData.spots,
-                  LatLng(providerData.location.latitude!,
-                      providerData.location.longitude!)),
+                  LatLng(providerData.location.latitude,
+                      providerData.location.longitude)),
             ),
             Padding(
                 padding: const EdgeInsets.symmetric(

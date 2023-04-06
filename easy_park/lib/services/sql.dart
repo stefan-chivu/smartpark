@@ -37,11 +37,6 @@ class SqlService {
   SqlService._privateConstructor();
   static final SqlService instance = SqlService._privateConstructor();
 
-/* 
-  TODO: only get available spots OR only display available spots
-     by only displaying available spots instead of not fetching them at all
-     some logic such as 'soon-to-be freed' spots might be added 
-*/
   static Future<List<SpotInfo>> getParkingSpotsAroundPosition(
       double latitude, double longitude, double rangeKm) async {
     List<SpotInfo> parkingInfo = [];
@@ -514,7 +509,7 @@ class SqlService {
   }
 
   static Future<void> reserveSpot(int spotId) async {
-    var result = await pool.execute(
+    await pool.execute(
         "INSERT INTO `Reservations` (`spot_id`, `reserved_by`) VALUES (:spot_id, :uid)",
         {
           "spot_id": spotId,
@@ -524,7 +519,7 @@ class SqlService {
   }
 
   static Future<void> clearSpotReservation(int spotId) async {
-    var result = await pool.execute(
+    await pool.execute(
         "DELETE FROM `Reservations` WHERE `spot_id` = :spot_id", {
       "spot_id": spotId,
       "uid": IsarService.isarUser.uid,

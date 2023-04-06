@@ -47,7 +47,7 @@ class _AddSensorState extends State<AddSensor> {
     try {
       Position data = await Geolocator.getCurrentPosition();
       try {
-        LatLng crtLatLng = LatLng(data.latitude!, data.longitude!);
+        LatLng crtLatLng = LatLng(data.latitude, data.longitude);
         Address address = await LocationService.addressFromLatLng(
             crtLatLng.latitude, crtLatLng.longitude);
 
