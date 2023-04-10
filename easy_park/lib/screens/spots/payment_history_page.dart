@@ -26,7 +26,7 @@ class _ParkingHistoryPageState extends ConsumerState<ParkingHistoryPage> {
             backgroundColor: AppColors.slateGray,
             onPressed: () async {
               setState(() {
-                ref.invalidate(paymentHistoryProvider);
+                ref.refresh(paymentHistoryProvider);
 
                 if (mounted) {
                   showLoadingSnackBar(context, "Refreshing...");

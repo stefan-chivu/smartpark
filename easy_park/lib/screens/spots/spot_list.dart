@@ -40,7 +40,7 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
             backgroundColor: AppColors.slateGray,
             onPressed: () async {
               setState(() {
-                ref.invalidate(spotProvider(providerInput));
+                ref.refresh(spotProvider(providerInput));
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

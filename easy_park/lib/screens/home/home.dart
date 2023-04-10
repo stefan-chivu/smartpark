@@ -48,7 +48,7 @@ class _HomeState extends ConsumerState<Home> {
               isExtended: true,
               backgroundColor: Colors.blueGrey,
               onPressed: () async {
-                ref.invalidate(spotProvider(providerInput));
+                ref.refresh(spotProvider(providerInput));
                 Address newAddress = await LocationService.addressFromLatLng(
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
