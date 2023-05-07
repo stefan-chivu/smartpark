@@ -1,10 +1,10 @@
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/services/location.dart';
-import 'package:easy_park/services/mapbox.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SpotStatusListTile extends StatelessWidget {
   final SpotInfo spot;
@@ -93,8 +93,13 @@ class SpotStatusListTile extends StatelessWidget {
               elevation: 0,
               backgroundColor: spotColor,
               onPressed: () async {
-                await SqlService.reserveSpot(spot.sensorId);
-                await MapboxService.navigate(context, spot);
+                Navigator.pushNamed(context, '/navigate', arguments: {
+                  'origin': location ?? await Geolocator.getCurrentPosition(),
+                  'destination': LatLng(spot.latitude, spot.longitude),
+                  'spot': spot
+                });
+                // await SqlService.reserveSpot(spot.sensorId);
+                // await MapboxService.navigate(context, spot);
               },
               icon: const Icon(Icons.directions),
               label: const Text("Directions"),
