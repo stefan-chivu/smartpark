@@ -48,7 +48,6 @@ class _HomeState extends ConsumerState<Home> {
               isExtended: true,
               backgroundColor: Colors.blueGrey,
               onPressed: () async {
-                ref.refresh(spotProvider(providerInput));
                 Address newAddress = await LocationService.addressFromLatLng(
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
@@ -62,6 +61,7 @@ class _HomeState extends ConsumerState<Home> {
                   showRefresh = false;
                   _controller.text = newAddress.toString();
                 });
+                ref.refresh(spotProvider(providerInput));
               },
               label: const Text("Search this area"),
             ),

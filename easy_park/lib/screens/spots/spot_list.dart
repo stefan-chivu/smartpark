@@ -51,7 +51,10 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
                           SizedBox(
                             width: AppMargins.M,
                           ),
-                          Text("Checking for new spots...")
+                          Text(
+                            "Checking for new spots...",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )
                         ]),
                     backgroundColor: AppColors.blueGreen,
                   ));
