@@ -157,28 +157,28 @@ class _NavigationPageState extends State<NavigationPage> {
             ),
           ),
         ),
-        Visibility(
-          visible: _isNavigating,
-          child: SizedBox.fromSize(
-            size: const Size.fromHeight(AppMargins.XL),
-            child: Expanded(
-                child: DecoratedBox(
-              decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                        color: AppColors.slateGray.withOpacity(0.5),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: const Offset(0, 3))
-                  ],
-                  color: Colors.white,
-                  border: const Border(
-                      top: BorderSide(width: 0.1, color: AppColors.slateGray))),
-              child: Row(children: [
-                SizedBox.fromSize(
-                  size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppMargins.S),
+        SizedBox.fromSize(
+          size: const Size.fromHeight(AppMargins.XL),
+          child: Expanded(
+              child: DecoratedBox(
+            decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                      color: AppColors.slateGray.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3))
+                ],
+                color: Colors.white,
+                border: const Border(
+                    top: BorderSide(width: 0.1, color: AppColors.slateGray))),
+            child: Row(children: [
+              SizedBox.fromSize(
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppMargins.S),
+                  child: Visibility(
+                    visible: _isNavigating,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -213,48 +213,48 @@ class _NavigationPageState extends State<NavigationPage> {
                     ),
                   ),
                 ),
-                SizedBox.fromSize(
-                  size: Size.fromWidth(MediaQuery.of(context).size.width * 0.5),
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _durationRemaining != null
-                                  ? "${(_durationRemaining! / 60).round()} min"
-                                  : "",
-                              style: const TextStyle(
-                                fontSize: AppFontSizes.L,
-                              ),
+              ),
+              SizedBox.fromSize(
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.4),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _durationRemaining != null
+                                ? "${(_durationRemaining! / 60).round()} min"
+                                : "",
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.L,
                             ),
-                            const Text(
-                              ' • ',
-                              style: TextStyle(
-                                fontSize: AppFontSizes.L,
-                              ),
+                          ),
+                          const Text(
+                            ' • ',
+                            style: TextStyle(
+                              fontSize: AppFontSizes.L,
                             ),
-                            Text(
-                              _distanceRemaining != null
-                                  ? showDistanceRemaining(_distanceRemaining!)
-                                  : "",
-                              style: const TextStyle(
-                                fontSize: AppFontSizes.L,
-                              ),
+                          ),
+                          Text(
+                            _distanceRemaining != null
+                                ? showDistanceRemaining(_distanceRemaining!)
+                                : "",
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.L,
                             ),
-                          ],
-                        )
-                      ]),
-                ),
-                SizedBox.fromSize(
-                  size: Size.fromWidth(MediaQuery.of(context).size.width * 0.2),
-                  child: Container(),
-                )
-              ]),
-            )),
-          ),
-        )
+                          ),
+                        ],
+                      )
+                    ]),
+              ),
+              SizedBox.fromSize(
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                child: Container(),
+              )
+            ]),
+          )),
+        ),
       ]),
       bottomNavigationBar: const CustomNavBar(),
     );

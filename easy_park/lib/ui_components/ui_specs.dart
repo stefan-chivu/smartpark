@@ -27,5 +27,5 @@ class AppMargins {
   static const double L = 50;
   static const double XL = 70;
   static const double XXL = 100;
-  static const double XXXL = 120;
+  static const double XXXL = 140;
 }
