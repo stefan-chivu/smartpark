@@ -98,8 +98,6 @@ class SpotStatusListTile extends StatelessWidget {
                   'destination': LatLng(spot.latitude, spot.longitude),
                   'spot': spot
                 });
-                // await SqlService.reserveSpot(spot.sensorId);
-                // await MapboxService.navigate(context, spot);
               },
               icon: const Icon(Icons.directions),
               label: const Text("Directions"),

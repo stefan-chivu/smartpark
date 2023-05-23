@@ -1,4 +1,5 @@
 import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
@@ -72,9 +73,17 @@ class _NavigationPageState extends State<NavigationPage> {
       setState(() {
         _options = options;
       });
+      await SqlService.reserveSpot(spot.sensorId);
     } catch (err) {
       print(err);
     }
+  }
+
+  // TODO: handle app closing scenario
+  @override
+  void dispose() {
+    super.dispose();
+    SqlService.clearSpotReservation(spot.sensorId);
   }
 
   @override
