@@ -1,7 +1,6 @@
 import 'package:easy_park/models/parking_info.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/spot_status_listtile.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
@@ -20,7 +19,7 @@ class ParkingSpotList extends ConsumerStatefulWidget {
 class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
   SpotProviderInput providerInput = SpotProviderInput();
   LatLng? position;
-  List<ParkingInfo>? spots;
+  List<SpotInfo>? spots;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +36,11 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
 
     return providerData.when(data: (providerData) {
       return Scaffold(
-          appBar: const CustomAppBar(showHome: true),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.slateGray,
             onPressed: () async {
               setState(() {
-                // TODO: check state update
-                ref.invalidate(spotProvider(providerInput));
+                ref.refresh(spotProvider(providerInput));
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -54,7 +51,10 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
                           SizedBox(
                             width: AppMargins.M,
                           ),
-                          Text("Checking for new spots...")
+                          Text(
+                            "Checking for new spots...",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )
                         ]),
                     backgroundColor: AppColors.blueGreen,
                   ));
@@ -67,7 +67,7 @@ class _ParkingSpotListState extends ConsumerState<ParkingSpotList> {
           body: ListView.separated(
             itemCount: providerData.spots.length,
             itemBuilder: (context, index) {
-              ParkingInfo spot = providerData.spots[index];
+              SpotInfo spot = providerData.spots[index];
               if (spot.state != SpotState.occupied) {
                 return SpotStatusListTile(
                   spot: spot,

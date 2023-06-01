@@ -48,7 +48,6 @@ class AddressSearch extends SearchDelegate<Suggestion> {
     if (_timer?.isActive ?? false) _timer!.cancel();
     _completer = Completer<List<Suggestion>>();
     _timer = Timer(searchDelay, () async {
-      print("Waited ${searchDelay.inMilliseconds} ms");
       final List<Suggestion> suggestions =
           await PlaceApiProvider.fetchSuggestions(query, 'en', sessionToken);
       _completer.complete(suggestions);

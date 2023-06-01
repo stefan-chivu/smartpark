@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SpotDetails extends StatelessWidget {
-  final ParkingInfo spot;
+  final SpotInfo spot;
   final LatLng location;
 
   const SpotDetails({super.key, required this.spot, required this.location});

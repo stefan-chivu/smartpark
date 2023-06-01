@@ -1,14 +1,14 @@
 import 'package:easy_park/models/parking_info.dart';
-import 'package:easy_park/screens/spots/directions_map.dart';
 import 'package:easy_park/services/location.dart';
+import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 class SpotStatusListTile extends StatelessWidget {
-  final ParkingInfo spot;
-  final LocationData? location;
+  final SpotInfo spot;
+  final Position? location;
   const SpotStatusListTile({super.key, required this.spot, this.location});
 
   @override
@@ -16,7 +16,7 @@ class SpotStatusListTile extends StatelessWidget {
     double? distance;
     if (location != null) {
       distance = calculateDistance(spot.latitude, spot.longitude,
-          location!.latitude!, location!.longitude!);
+          location!.latitude, location!.longitude);
     }
     Color spotColor;
     String spotStatus;
@@ -88,18 +88,16 @@ class SpotStatusListTile extends StatelessWidget {
               spot.state == SpotState.unknown ||
               spot.state == SpotState.freeingSoon)
             FloatingActionButton.extended(
+              heroTag: UniqueKey(),
               isExtended: true,
               elevation: 0,
               backgroundColor: spotColor,
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MapScreen(
-                        destination: LatLng(spot.latitude, spot.longitude),
-                        sensorId: spot.sensorId,
-                      ),
-                    ));
+              onPressed: () async {
+                Navigator.pushNamed(context, '/navigate', arguments: {
+                  'origin': location ?? await Geolocator.getCurrentPosition(),
+                  'destination': LatLng(spot.latitude, spot.longitude),
+                  'spot': spot
+                });
               },
               icon: const Icon(Icons.directions),
               label: const Text("Directions"),

@@ -2,13 +2,13 @@ import 'package:easy_park/models/address.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/services/location.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/loading_snack_bar.dart';
 import 'package:easy_park/ui_components/search_address_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Home extends ConsumerStatefulWidget {
@@ -37,12 +37,10 @@ class _HomeState extends ConsumerState<Home> {
 
   @override
   Widget build(BuildContext context) {
-    providerInput.context = context;
     final providerData = ref.watch(spotProvider(providerInput));
 
     return providerData.when(data: (providerData) {
       return Scaffold(
-          appBar: const CustomAppBar(showHome: true),
           floatingActionButton: AnimatedOpacity(
             duration: const Duration(milliseconds: 250),
             opacity: showRefresh ? 1.0 : 0.0,
@@ -50,8 +48,6 @@ class _HomeState extends ConsumerState<Home> {
               isExtended: true,
               backgroundColor: Colors.blueGrey,
               onPressed: () async {
-                // ignore: unused_result
-                ref.refresh(spotProvider(providerInput));
                 Address newAddress = await LocationService.addressFromLatLng(
                     tmpPosition!.latitude, tmpPosition!.longitude);
                 if (mounted) {
@@ -60,32 +56,12 @@ class _HomeState extends ConsumerState<Home> {
                       color: AppColors.blueGreen, durationSeconds: 2);
                 }
                 setState(() {
+                  providerInput.context = context;
                   providerInput.position = tmpPosition;
                   showRefresh = false;
                   _controller.text = newAddress.toString();
                 });
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    duration: const Duration(seconds: 5),
-                    content: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Found ${providerData.spots.length} spots!",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            width: AppMargins.XS,
-                          ),
-                          const Icon(
-                            Icons.local_parking_outlined,
-                            color: AppColors.emerald,
-                          ),
-                        ]),
-                    backgroundColor: AppColors.pineTree,
-                  ));
-                }
+                ref.refresh(spotProvider(providerInput));
               },
               label: const Text("Search this area"),
             ),
@@ -94,10 +70,12 @@ class _HomeState extends ConsumerState<Home> {
               FloatingActionButtonLocation.miniCenterFloat,
           body: Stack(alignment: AlignmentDirectional.topStart, children: [
             GoogleMap(
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
               mapType: MapType.normal,
               initialCameraPosition: CameraPosition(
-                  target: LatLng(providerData.location.latitude!,
-                      providerData.location.longitude!),
+                  target: LatLng(providerData.location.latitude,
+                      providerData.location.longitude),
                   zoom: 18),
               onMapCreated: (controller) => _mapController = controller,
               onCameraMoveStarted: () {
@@ -113,20 +91,50 @@ class _HomeState extends ConsumerState<Home> {
               markers: getMarkers(
                   context,
                   providerData.spots,
-                  LatLng(providerData.location.latitude!,
-                      providerData.location.longitude!)),
+                  LatLng(providerData.location.latitude,
+                      providerData.location.longitude)),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppMargins.S, vertical: AppMargins.S),
-              child: SizedBox(
-                  width: MediaQuery.of(context).size.width / 1.3,
-                  child: SearchAddressTextField(
-                    label: 'Search...',
-                    controller: _controller,
-                    mapController: _mapController,
-                  )),
-            )
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppMargins.S, vertical: AppMargins.L),
+                child: SearchAddressTextField(
+                  label: 'Search...',
+                  controller: _controller,
+                  mapController: _mapController,
+                )),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppMargins.S, vertical: AppMargins.L),
+                child: Material(
+                  shape: const CircleBorder(side: BorderSide.none),
+                  elevation: 8,
+                  child: Ink(
+                    decoration: const ShapeDecoration(
+                      color: AppColors.slateGray,
+                      shape: CircleBorder(),
+                    ),
+                    child: IconButton(
+                      color: Colors.white,
+                      onPressed: () async {
+                        if (_mapController != null) {
+                          Position userLocation =
+                              await Geolocator.getCurrentPosition();
+                          _mapController!.animateCamera(CameraUpdate.newLatLng(
+                              LatLng(userLocation.latitude,
+                                  userLocation.longitude)));
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.my_location_rounded,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ]),
           bottomNavigationBar: CustomNavBar(
               position: tmpPosition,

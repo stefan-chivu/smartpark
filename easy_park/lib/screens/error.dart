@@ -7,25 +7,23 @@ class ErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: Container(
-            color: Colors.white,
-            child: Column(children: [
-              const SizedBox(
-                height: AppMargins.L,
-              ),
-              Image.asset(
-                "assets/images/error.png",
-                width: 300,
-              ),
-              const Padding(
-                  padding: EdgeInsets.all(AppMargins.L),
-                  child: Text(
-                    "We've run into some issues, please try again later",
-                    style: TextStyle(fontSize: AppFontSizes.L),
-                    textAlign: TextAlign.center,
-                  )),
-              Text(errorMsg ?? "")
-            ])));
+    return Scaffold(
+        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const SizedBox(
+        height: AppMargins.L,
+      ),
+      Image.asset(
+        "assets/images/error.png",
+        width: 300,
+      ),
+      const Padding(
+          padding: EdgeInsets.all(AppMargins.L),
+          child: Text(
+            "We've run into some issues, please try again later",
+            style: TextStyle(fontSize: AppFontSizes.L),
+            textAlign: TextAlign.center,
+          )),
+      Text(errorMsg ?? "")
+    ]));
   }
 }

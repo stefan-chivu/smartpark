@@ -4,13 +4,13 @@ import 'package:easy_park/models/zone.dart';
 
 enum SpotState { free, occupied, reserved, freeingSoon, unknown }
 
-class ParkingInfo {
+class SpotInfo {
   int sensorId;
   double latitude;
   double longitude;
   Address address;
   Zone zone;
   SpotState state;
-  ParkingInfo(this.sensorId, this.latitude, this.longitude, this.address,
+  SpotInfo(this.sensorId, this.latitude, this.longitude, this.address,
       this.zone, this.state);
 }

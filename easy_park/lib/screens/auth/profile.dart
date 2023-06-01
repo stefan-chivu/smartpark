@@ -7,10 +7,10 @@ import 'package:easy_park/services/isar.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/address_expansion_panel.dart';
 import 'package:easy_park/ui_components/car_expansion_panel.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:easy_park/ui_components/loading_snack_bar.dart';
+import 'package:easy_park/ui_components/label_icon_button.dart';
 import 'package:easy_park/ui_components/profile_picture.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +71,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(showHome: true),
       body: SingleChildScrollView(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -106,7 +105,34 @@ class _ProfilePageState extends State<ProfilePage> {
                   controller:
                       TextEditingController(text: IsarService.isarUser.email),
                 )),
-            const Padding(padding: EdgeInsets.all(AppMargins.S)),
+            IsarService.isarUser.isAdmin
+                ? Column(
+                    children: [
+                      const Padding(padding: EdgeInsets.all(AppMargins.S)),
+                      Title(
+                        color: Colors.black,
+                        child: const Text(
+                          'Admin panel',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: AppFontSizes.L),
+                        ),
+                      ),
+                      const Padding(padding: EdgeInsets.all(AppMargins.S)),
+                      LabelIconButton(
+                          color: AppColors.slateGray,
+                          icon: Icons.add_location_alt_outlined,
+                          text: "Add sensor",
+                          onTap: () async {
+                            Navigator.pushNamed(context, '/add-sensor');
+                          }),
+                      const TextField(
+                        enabled: false,
+                      ),
+                      const Padding(padding: EdgeInsets.all(AppMargins.M)),
+                    ],
+                  )
+                : Container(),
             SizedBox(
                 width: MediaQuery.of(context).size.width / widgetWidthRatio,
                 child: CustomTextField(

@@ -5,13 +5,13 @@ import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
-import 'package:easy_park/ui_components/custom_app_bar.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
+import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 class AddSensor extends StatefulWidget {
   const AddSensor({super.key});
@@ -45,31 +45,32 @@ class _AddSensorState extends State<AddSensor> {
   }
 
   Future<LocationInfo> getLocationInfo() async {
-    LocationData data = await LocationService.getCurrentLocation();
-
-    if ((data.latitude == null || data.longitude == null) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Failed fetching location data"),
-        backgroundColor: AppColors.orangeRed,
-      ));
-      return Future.error('Fetching location data failed');
-    }
-
     try {
-      LatLng crtLatLng = LatLng(data.latitude!, data.longitude!);
-      Address address = await LocationService.addressFromLatLng(
-          crtLatLng.latitude, crtLatLng.longitude);
+      Position data = await Geolocator.getCurrentPosition();
+      try {
+        LatLng crtLatLng = LatLng(data.latitude, data.longitude);
+        Address address = await LocationService.addressFromLatLng(
+            crtLatLng.latitude, crtLatLng.longitude);
 
-      return LocationInfo(crtLatLng, address);
+        return LocationInfo(crtLatLng, address);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.orangeRed,
+          ));
+        }
+        return Future.error(e.toString());
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString()),
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Failed fetching location data"),
           backgroundColor: AppColors.orangeRed,
         ));
       }
-      return Future.error(e.toString());
     }
+    return Future.error('Fetching location data failed');
   }
 
   Future<List<DropdownMenuItem<int>>> getZones() async {
@@ -101,12 +102,15 @@ class _AddSensorState extends State<AddSensor> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const CustomAppBar(showHome: true),
-        body: isWaiting
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : Column(children: [
+      body: isWaiting
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SingleChildScrollView(
+              child: Column(children: [
+                const SizedBox(
+                  height: AppMargins.XXL,
+                ),
                 Padding(
                   padding: const EdgeInsets.all(AppMargins.S),
                   child: Form(
@@ -306,7 +310,10 @@ class _AddSensorState extends State<AddSensor> {
                           }
                         },
                         text: "Add Sensor")),
-              ]));
+              ]),
+            ),
+      bottomNavigationBar: const CustomNavBar(),
+    );
   }
 }
 

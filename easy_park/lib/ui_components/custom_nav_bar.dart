@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomNavBar extends StatelessWidget {
   final LatLng? position;
-  final List<ParkingInfo>? spots;
+  final List<SpotInfo>? spots;
   const CustomNavBar({super.key, this.position, this.spots});
 
   @override
@@ -20,12 +20,16 @@ class CustomNavBar extends StatelessWidget {
       unselectedItemColor: Colors.white,
       items: const [
         BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+            backgroundColor: AppColors.slateGray),
+        BottomNavigationBarItem(
             icon: Icon(Icons.person_pin),
-            label: "Profile",
+            label: "Profile ",
             backgroundColor: AppColors.slateGray),
         BottomNavigationBarItem(
             icon: Icon(Icons.history),
-            label: "History",
+            label: " History",
             backgroundColor: AppColors.slateGray),
         BottomNavigationBarItem(
             icon: Icon(Icons.payment),
@@ -39,25 +43,15 @@ class CustomNavBar extends StatelessWidget {
       onTap: ((index) {
         switch (index) {
           case 0:
-            Navigator.pushNamed(context, '/profile');
+            Navigator.pushNamed(context, '/');
             break;
           case 1:
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: const Text('Parking history'),
-                actions: <TextButton>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  )
-                ],
-              ),
-            );
+            Navigator.pushNamed(context, '/profile');
             break;
           case 2:
+            Navigator.pushNamed(context, '/history');
+            break;
+          case 3:
             showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
@@ -73,7 +67,7 @@ class CustomNavBar extends StatelessWidget {
               ),
             );
             break;
-          case 3:
+          case 4:
             Navigator.pushNamed(
               context,
               '/spot-list',
