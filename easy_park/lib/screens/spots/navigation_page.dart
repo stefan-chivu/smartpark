@@ -26,7 +26,8 @@ class _NavigationPageState extends State<NavigationPage> {
   MapBoxOptions? _options;
 
   bool _isMultipleStop = false;
-  double? _distanceRemaining, _durationRemaining;
+  double _distanceRemaining = -1;
+  double _durationRemaining = -1;
   MapBoxNavigationViewController? _controller;
   bool _routeBuilt = false;
   bool _isNavigating = false;
@@ -129,7 +130,6 @@ class _NavigationPageState extends State<NavigationPage> {
         ),
         if (_options != null)
           Expanded(
-            flex: 1,
             child: MapBoxNavigationView(
                 options: _options,
                 onRouteEvent: _onEmbeddedRouteEvent,
@@ -376,8 +376,10 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   Future<void> _onEmbeddedRouteEvent(e) async {
-    _distanceRemaining = await _controller!.distanceRemaining;
-    _durationRemaining = await _controller!.durationRemaining;
+    if (_controller != null) {
+      _distanceRemaining = await _controller!.distanceRemaining;
+      _durationRemaining = await _controller!.durationRemaining;
+    }
     print(e.eventType);
 
     if (prevEvent == null) {
