@@ -1,328 +1,224 @@
-import 'dart:async';
-
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/zone.dart';
+import 'package:easy_park/providers/add_spot_provider.dart';
+import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/screens/home/home.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_button.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/custom_textfield.dart';
+import 'package:easy_park/ui_components/loading_snack_bar.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class AddSensor extends StatefulWidget {
+class AddSensor extends ConsumerStatefulWidget {
   const AddSensor({super.key});
 
   @override
-  State<AddSensor> createState() => _AddSensorState();
+  ConsumerState<AddSensor> createState() => _AddSensorState();
 }
 
-class _AddSensorState extends State<AddSensor> {
+class _AddSensorState extends ConsumerState<AddSensor> {
   final _sensorIdFormKey = GlobalKey<FormState>();
   final TextEditingController _sensorIdController = TextEditingController();
   int? _zoneID;
-  LocationInfo? _sensorPosition;
+  LatLng? _sensorPosition;
+  Address? _sensorAddress;
   Marker? _marker;
-  bool isWaiting = false;
-
-  Future<LocationInfo>? _positionFuture;
-  Future<List<DropdownMenuItem<int>>>? _dropdownFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _positionFuture = getLocationInfo();
-    _dropdownFuture = getZones();
-  }
-
-  @override
-  void didChangeDependencies() async {
-    super.didChangeDependencies();
-    _positionFuture = getLocationInfo();
-  }
-
-  Future<LocationInfo> getLocationInfo() async {
-    try {
-      Position data = await Geolocator.getCurrentPosition();
-      try {
-        LatLng crtLatLng = LatLng(data.latitude, data.longitude);
-        Address address = await LocationService.addressFromLatLng(
-            crtLatLng.latitude, crtLatLng.longitude);
-
-        return LocationInfo(crtLatLng, address);
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.orangeRed,
-          ));
-        }
-        return Future.error(e.toString());
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Failed fetching location data"),
-          backgroundColor: AppColors.orangeRed,
-        ));
-      }
-    }
-    return Future.error('Fetching location data failed');
-  }
-
-  Future<List<DropdownMenuItem<int>>> getZones() async {
-    List<Zone>? zones = await SqlService.getZones();
-    List<DropdownMenuItem<int>>? dropdownOptions = List.empty(growable: true);
-    if (zones == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-          "No zones were fetched from the database",
-          textAlign: TextAlign.center,
-        ),
-        backgroundColor: AppColors.orangeRed,
-      ));
-      return Future.error("Fetching zone information failed");
-    }
-
-    for (Zone zone in zones!) {
-      dropdownOptions.add(DropdownMenuItem(
-        value: zone.id,
-        child: Text(
-          zone.name,
-          textAlign: TextAlign.center,
-        ),
-      ));
-    }
-    return dropdownOptions;
-  }
+  List<DropdownMenuItem<int>> dropdownOptions = List.empty(growable: true);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: isWaiting
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : SingleChildScrollView(
-              child: Column(children: [
-                const SizedBox(
-                  height: AppMargins.XXL,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppMargins.S),
-                  child: Form(
-                    key: _sensorIdFormKey,
-                    child: CustomTextField(
-                      keyboardType: const TextInputType.numberWithOptions(
-                          signed: false, decimal: false),
-                      label: "Sensor ID",
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return "An ID is required";
-                        }
-                        // TODO: Only allow int values
-                        // Return null if the entered sensor is valid
-                        return null;
-                      },
-                      controller: _sensorIdController,
-                    ),
-                  ),
-                ),
-                FutureBuilder(
-                    future: _positionFuture,
-                    builder: ((BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.waiting:
-                          return Container(
-                            color: Colors.white,
-                            child: const Center(
-                              child: SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
-                          );
-                        default:
-                          if (snapshot.hasError) {
-                            return Text(snapshot.error.toString());
-                          } else if (snapshot.hasData) {
-                            _sensorPosition ??= snapshot.data;
-                            _marker = Marker(
-                              draggable: true,
-                              markerId: const MarkerId("crtLocation"),
-                              position: _sensorPosition!.latLng,
-                              onDragEnd: (value) {
-                                _sensorPosition!.latLng = _marker!.position;
-                              },
-                            );
-                            // TODO: replace FutureBuilder logic with FutureProvider
-                            return Column(
-                              children: [
-                                Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.3,
-                                      child: GoogleMap(
-                                        tiltGesturesEnabled: false,
-                                        zoomGesturesEnabled: false,
-                                        rotateGesturesEnabled: false,
-                                        markers: {_marker!},
-                                        mapType: MapType.hybrid,
-                                        initialCameraPosition: CameraPosition(
-                                            target: _sensorPosition!.latLng,
-                                            zoom: 19),
-                                        myLocationEnabled: true,
-                                        onCameraIdle: () async {
-                                          try {
-                                            _sensorPosition!.address =
-                                                await LocationService
-                                                    .addressFromLatLng(
-                                                        _sensorPosition!
-                                                            .latLng.latitude,
-                                                        _sensorPosition!
-                                                            .latLng.longitude);
-                                            setState(() {});
-                                          } catch (e) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                content: Text(e.toString()),
-                                                backgroundColor:
-                                                    AppColors.orangeRed,
-                                              ));
-                                            }
-                                          }
-                                        },
-                                        onCameraMove: (position) async {
-                                          _sensorPosition!.latLng =
-                                              position.target;
-                                          setState(() {});
-                                        },
-                                      ),
-                                    )),
-                                Padding(
-                                  padding: const EdgeInsets.all(AppMargins.S),
-                                  child: Expanded(
-                                      child: Text(
-                                    _sensorPosition!.address.toString(),
-                                    textAlign: TextAlign.center,
-                                  )),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(AppMargins.S),
-                                  child: Text(
-                                    "${_sensorPosition!.latLng.latitude.toStringAsFixed(5)},  ${_sensorPosition!.latLng.longitude.toStringAsFixed(5)}",
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                      }
-                      return const Text("Error updating coordinates");
-                    })),
-                FutureBuilder(
-                  future: _dropdownFuture,
-                  builder:
-                      (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return Container(
-                          color: Colors.white,
-                          child: const Center(
-                            child: SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                        );
-                      default:
-                        try {
-                          return Padding(
-                              padding: const EdgeInsets.all(AppMargins.M),
-                              child: DropdownButton(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(AppFontSizes.XL)),
-                                hint: const Text("Zone"),
-                                isExpanded: true,
-                                value: _zoneID,
-                                icon: const Icon(Icons.keyboard_arrow_down),
-                                items: snapshot.data,
-                                onChanged: (int? newValue) {
-                                  setState(() {
-                                    _zoneID = newValue!;
-                                  });
-                                },
-                              ));
-                        } catch (e) {
-                          return const CustomTextField(
-                            label: "Zone",
-                            enabled: false,
-                          );
-                        }
+    final providerData = ref.watch(addSensorProvider);
+
+    return providerData.when(data: (providerData) {
+      if (_sensorPosition == null || _sensorAddress == null) {
+        setState(() {
+          _sensorPosition = providerData.crtPosition;
+          _sensorAddress = providerData.crtAddress;
+        });
+      }
+
+      if (providerData.zones.isEmpty && mounted) {
+        return const ErrorPage(
+            errorMsg:
+                "No zones were fetched from the database. Please try again later");
+      }
+
+      dropdownOptions = [];
+      for (Zone zone in providerData.zones) {
+        dropdownOptions.add(DropdownMenuItem(
+          value: zone.id,
+          child: Text(
+            zone.name,
+            textAlign: TextAlign.center,
+          ),
+        ));
+      }
+
+      _marker = Marker(
+        draggable: true,
+        markerId: const MarkerId("crtLocation"),
+        position: _sensorPosition!,
+        onDragEnd: (value) {
+          _sensorPosition = _marker!.position;
+        },
+      );
+
+      return Scaffold(
+        body: SingleChildScrollView(
+          child: Column(children: [
+            const SizedBox(
+              height: AppMargins.XXL,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppMargins.S),
+              child: Form(
+                key: _sensorIdFormKey,
+                child: CustomTextField(
+                  keyboardType: const TextInputType.numberWithOptions(
+                      signed: false, decimal: false),
+                  label: "Sensor ID",
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return "An ID is required";
                     }
+                    // TODO: Only allow int values
+                    // Return null if the entered sensor is valid
+                    return null;
                   },
+                  controller: _sensorIdController,
                 ),
-                Padding(
-                    padding: const EdgeInsets.all(AppMargins.M),
-                    child: CustomButton(
-                        onPressed: () async {
-                          if (_zoneID == null && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Please select a zone")));
-                            return;
-                          }
-                          if (_sensorIdFormKey.currentState!.validate()) {
-                            setState(() {
-                              isWaiting = true;
-                            });
-                            String result = await SqlService.addSensor(
-                                _sensorIdController.text,
-                                _sensorPosition!.latLng,
-                                _sensorPosition!.address,
-                                _zoneID!);
+              ),
+            ),
+            Column(
+              children: [
+                Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      child: GoogleMap(
+                        tiltGesturesEnabled: false,
+                        zoomGesturesEnabled: false,
+                        rotateGesturesEnabled: false,
+                        markers: {_marker!},
+                        mapType: MapType.hybrid,
+                        initialCameraPosition:
+                            CameraPosition(target: _sensorPosition!, zoom: 19),
+                        myLocationEnabled: true,
+                        onCameraIdle: () async {
+                          try {
+                            _sensorAddress =
+                                await LocationService.addressFromLatLng(
+                                    _sensorPosition!.latitude,
+                                    _sensorPosition!.longitude);
+                            setState(() {});
+                          } catch (e) {
                             if (mounted) {
-                              setState(() {
-                                isWaiting = false;
-                              });
-                              if (!result.contains("success")) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(result)));
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(result)));
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const Home()),
-                                );
-                              }
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: AppColors.orangeRed,
+                              ));
                             }
                           }
                         },
-                        text: "Add Sensor")),
-              ]),
+                        onCameraMove: (position) async {
+                          setState(() {
+                            _sensorPosition = position.target;
+                          });
+                        },
+                      ),
+                    )),
+                Padding(
+                  padding: const EdgeInsets.all(AppMargins.S),
+                  child: Text(
+                    _sensorAddress.toString(),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppMargins.S),
+                  child: Text(
+                    "${_sensorPosition!.latitude.toStringAsFixed(5)},  ${_sensorPosition!.longitude.toStringAsFixed(5)}",
+                  ),
+                ),
+              ],
             ),
-      bottomNavigationBar: const CustomNavBar(),
-    );
+            Padding(
+                padding: const EdgeInsets.all(AppMargins.M),
+                child: DropdownButton(
+                  borderRadius:
+                      const BorderRadius.all(Radius.circular(AppFontSizes.XL)),
+                  hint: const Text("Zone"),
+                  isExpanded: true,
+                  value: _zoneID,
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  items: dropdownOptions,
+                  onChanged: (int? newValue) {
+                    setState(() {
+                      _zoneID = newValue!;
+                    });
+                  },
+                )),
+            Padding(
+                padding: const EdgeInsets.all(AppMargins.M),
+                child: CustomButton(
+                    onPressed: () async {
+                      if (_zoneID == null && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Please select a zone")));
+                        return;
+                      }
+                      if (_sensorIdFormKey.currentState!.validate()) {
+                        if (mounted) {
+                          showLoadingSnackBar(context, 'Adding new sensor',
+                              durationSeconds: 2, color: AppColors.blueGreen);
+                        }
+                        String result = await SqlService.addSensor(
+                            _sensorIdController.text,
+                            _sensorPosition!,
+                            _sensorAddress!,
+                            _zoneID!);
+                        if (mounted) {
+                          if (!result.contains("success")) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(SnackBar(content: Text(result)));
+                          } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(SnackBar(content: Text(result)));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const Home()),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    text: "Add Sensor")),
+          ]),
+        ),
+        bottomNavigationBar: const CustomNavBar(),
+      );
+    }, error: ((error, stackTrace) {
+      return ErrorPage(errorMsg: 'Error: ${error.toString()}');
+    }), loading: () {
+      return Container(
+        color: Colors.white,
+        child: const Center(
+          child: SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    });
   }
-}
-
-class LocationInfo {
-  LocationInfo(this.latLng, this.address);
-
-  LatLng latLng;
-  Address address;
-
-  @override
-  String toString() => 'LocationInfo[$latLng, $address]';
 }
