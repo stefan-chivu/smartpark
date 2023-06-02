@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:easy_park/models/address.dart';
 import 'package:easy_park/services/constants.dart';
+import 'package:easy_park/services/isar.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -56,17 +59,64 @@ class AddressSearch extends SearchDelegate<Suggestion> {
       future: _completer.future,
       builder: (context, AsyncSnapshot<List<Suggestion>> snapshot) => query ==
               ''
-          ? Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text('Type the address you are looking for')
-                  ]),
+          ? ListView(
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.info),
+                  title: Text('Type the address you are looking for'),
+                ),
+                IsarService.isarUser.homeAddress.isNotEmpty
+                    ? ListTile(
+                        leading: const Icon(Icons.home),
+                        title: Text(Address.fromJson(
+                                json.decode(IsarService.isarUser.homeAddress))
+                            .toString()),
+                        onTap: () async {
+                          Address crtAddress = Address.fromJson(
+                              json.decode(IsarService.isarUser.homeAddress));
+                          Suggestion crtSuggestion =
+                              Suggestion('home', crtAddress.toString());
+                          List<Location> locations = await GeocodingPlatform
+                              .instance
+                              .locationFromAddress(crtSuggestion.description);
+                          crtSuggestion.location = LatLng(
+                              locations[0].latitude, locations[0].longitude);
+                          // ignore: use_build_context_synchronously
+                          close(context, crtSuggestion);
+                        },
+                      )
+                    : const ListTile(),
+                IsarService.isarUser.workAddress.isNotEmpty
+                    ? ListTile(
+                        leading: const Icon(Icons.work),
+                        title: Text(Address.fromJson(
+                                json.decode(IsarService.isarUser.workAddress))
+                            .toString()),
+                        onTap: () async {
+                          Address crtAddress = Address.fromJson(
+                              json.decode(IsarService.isarUser.workAddress));
+                          Suggestion crtSuggestion =
+                              Suggestion('work', crtAddress.toString());
+                          List<Location> locations = await GeocodingPlatform
+                              .instance
+                              .locationFromAddress(crtSuggestion.description);
+                          crtSuggestion.location = LatLng(
+                              locations[0].latitude, locations[0].longitude);
+                          // ignore: use_build_context_synchronously
+                          close(context, crtSuggestion);
+                        },
+                      )
+                    : const ListTile(),
+              ],
             )
           : snapshot.hasData
               ? ListView.builder(
                   itemBuilder: (context, index) => ListTile(
+                    leading: snapshot.data![index].placeId == 'home'
+                        ? const Icon(Icons.home)
+                        : snapshot.data![index].placeId == 'work'
+                            ? const Icon(Icons.work)
+                            : const Icon(Icons.directions),
                     title: Text(snapshot.data![index].description),
                     onTap: () async {
                       Suggestion crtSuggestion = snapshot.data![index];
@@ -115,18 +165,34 @@ class PlaceApiProvider {
 
   static Future<List<Suggestion>> fetchSuggestions(
       String input, String lang, String sessionToken) async {
+    List<Suggestion> suggestions = [];
+
     final request =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&types=address&language=$lang&components=country:ro&key=$apiKey&sessiontoken=$sessionToken';
     final response = await client.get(request);
 
+    if (IsarService.isarUser.homeAddress.isNotEmpty) {
+      suggestions.add(Suggestion(
+          'home',
+          Address.fromJson(json.decode(IsarService.isarUser.homeAddress))
+              .toString()));
+    }
+
+    if (IsarService.isarUser.workAddress.isNotEmpty) {
+      suggestions.add(Suggestion(
+          'work',
+          Address.fromJson(json.decode(IsarService.isarUser.workAddress))
+              .toString()));
+    }
+
     if (response.statusCode == 200) {
       final result = response.data;
       if (result['status'] == 'OK') {
-        return result['predictions']
+        suggestions.addAll(result['predictions']
             .map<Suggestion>((p) => Suggestion(p['place_id'], p['description']))
-            .toList();
+            .toList());
       }
-      return [];
+      return suggestions;
     } else {
       throw Exception('Failed to fetch suggestion');
     }
