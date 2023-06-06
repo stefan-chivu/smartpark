@@ -101,8 +101,7 @@ class _NavigationPageState extends State<NavigationPage> {
           visible: _isNavigating,
           child: SizedBox.fromSize(
               size: const Size.fromHeight(AppMargins.XXXL),
-              child: Expanded(
-                  child: Container(
+              child: Container(
                 color: AppColors.pineTree,
                 child:
                     Column(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -114,7 +113,7 @@ class _NavigationPageState extends State<NavigationPage> {
                               fontSize: AppFontSizes.XL,
                               color: Colors.white),
                         )
-                      : Container(),
+                      : const Text(""),
                   Text(
                     _instruction ?? '',
                     style: const TextStyle(
@@ -126,7 +125,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     height: AppMargins.M,
                   ),
                 ]),
-              ))),
+              )),
         ),
         if (_options != null)
           Expanded(
@@ -235,7 +234,9 @@ class _NavigationPageState extends State<NavigationPage> {
                                           spot.sensorId);
 
                                       // Close the dialog
-                                      Navigator.of(context).pop();
+                                      if (mounted) {
+                                        Navigator.of(context).pop();
+                                      }
                                     },
                                     child: const Text('Yes')),
                                 TextButton(
@@ -289,7 +290,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     top: BorderSide(width: 0.1, color: AppColors.slateGray))),
             child: Row(children: [
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.25),
                 child: Padding(
                   padding: const EdgeInsets.all(AppMargins.S),
                   child: Visibility(
@@ -304,7 +305,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         'Stop',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: AppFontSizes.L),
+                            fontSize: AppFontSizes.M),
                       ),
                       onPressed: () async {
                         _controller!.finishNavigation();
@@ -330,7 +331,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 ),
               ),
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.4),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.5),
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -338,9 +339,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _durationRemaining != null
-                                ? "${(_durationRemaining! / 60).round()} min"
-                                : "",
+                            "${(_durationRemaining / 60).round()} min",
                             style: const TextStyle(
                               fontSize: AppFontSizes.L,
                             ),
@@ -364,7 +363,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     ]),
               ),
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.25),
                 child: Container(),
               )
             ]),
@@ -399,7 +398,13 @@ class _NavigationPageState extends State<NavigationPage> {
           setState(() {
             _instruction = progressEvent.currentStepInstruction;
             _instructionDistance = progressEvent.currentLeg != null
-                ? showDistanceRemaining(progressEvent.distance ?? 0)
+                ? progressEvent.currentLeg!.steps != null
+                    ? progressEvent.currentLeg!.steps!.isNotEmpty
+                        ? showDistanceRemaining(
+                            progressEvent.currentLeg!.steps!.first.distance ??
+                                0)
+                        : ""
+                    : ""
                 : "";
           });
         }
