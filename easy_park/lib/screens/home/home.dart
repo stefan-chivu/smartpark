@@ -1,6 +1,7 @@
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
+import 'package:easy_park/services/constants.dart';
 import 'package:easy_park/services/location.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
 import 'package:easy_park/ui_components/loading_snack_bar.dart';
@@ -37,6 +38,7 @@ class _HomeState extends ConsumerState<Home> {
 
   @override
   Widget build(BuildContext context) {
+    providerInput.context = context;
     final providerData = ref.watch(spotProvider(providerInput));
 
     return providerData.when(data: (providerData) {
@@ -58,6 +60,7 @@ class _HomeState extends ConsumerState<Home> {
                 setState(() {
                   providerInput.context = context;
                   providerInput.position = tmpPosition;
+                  providerInput.initialized = true;
                   showRefresh = false;
                   _controller.text = newAddress.toString();
                 });
@@ -77,7 +80,10 @@ class _HomeState extends ConsumerState<Home> {
                   target: LatLng(providerData.location.latitude,
                       providerData.location.longitude),
                   zoom: 18),
-              onMapCreated: (controller) => _mapController = controller,
+              onMapCreated: (controller) {
+                _mapController = controller;
+                _mapController!.setMapStyle(Constants.mapStyleString);
+              },
               onCameraMoveStarted: () {
                 showRefresh = true;
                 setState(() {});
@@ -88,11 +94,7 @@ class _HomeState extends ConsumerState<Home> {
                 });
               },
               myLocationEnabled: true,
-              markers: getMarkers(
-                  context,
-                  providerData.spots,
-                  LatLng(providerData.location.latitude,
-                      providerData.location.longitude)),
+              markers: providerData.markers,
             ),
             Padding(
                 padding: const EdgeInsets.symmetric(

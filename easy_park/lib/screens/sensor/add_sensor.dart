@@ -27,6 +27,7 @@ class _AddSensorState extends ConsumerState<AddSensor> {
   int? _zoneID;
   LatLng? _sensorPosition;
   Address? _sensorAddress;
+  bool _hasElectricCharging = false;
   Marker? _marker;
   List<DropdownMenuItem<int>> dropdownOptions = List.empty(growable: true);
 
@@ -150,7 +151,8 @@ class _AddSensorState extends ConsumerState<AddSensor> {
               ],
             ),
             Padding(
-                padding: const EdgeInsets.all(AppMargins.M),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppMargins.L, vertical: AppMargins.S),
                 child: DropdownButton(
                   borderRadius:
                       const BorderRadius.all(Radius.circular(AppFontSizes.XL)),
@@ -165,6 +167,16 @@ class _AddSensorState extends ConsumerState<AddSensor> {
                     });
                   },
                 )),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Checkbox(
+                  value: _hasElectricCharging,
+                  onChanged: (value) {
+                    setState(() {
+                      _hasElectricCharging = value ?? false;
+                    });
+                  }),
+              const Text("Electrical charging station"),
+            ]),
             Padding(
                 padding: const EdgeInsets.all(AppMargins.M),
                 child: CustomButton(
@@ -183,6 +195,7 @@ class _AddSensorState extends ConsumerState<AddSensor> {
                         String result = await SqlService.addSensor(
                             _sensorIdController.text,
                             _sensorPosition!,
+                            _hasElectricCharging,
                             _sensorAddress!,
                             _zoneID!);
                         if (mounted) {

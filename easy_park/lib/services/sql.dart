@@ -60,6 +60,7 @@ class SqlService {
         int sensorId = row.typedColByName<int>("sensor_id")!;
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
+        bool isElectric = row.typedColByName<bool>("is_electric")!;
         int addressId = row.typedColByName<int>("address_id")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
 
@@ -71,7 +72,7 @@ class SqlService {
         SpotState spotState = await getSensorStatus(sensorId);
 
         parkingInfo.add((SpotInfo(sensorId, position.latitude,
-            position.longitude, address, zone, spotState)));
+            position.longitude, isElectric, address, zone, spotState)));
       }
     } catch (e) {
       print(e.toString());
@@ -168,6 +169,7 @@ class SqlService {
         }
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
+        bool isElectric = row.typedColByName<bool>("is_electric")!;
         int addressId = row.typedColByName<int>("address_id")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
 
@@ -177,7 +179,7 @@ class SqlService {
         Zone zone = await getZoneById(zoneId);
 
         return (SpotInfo(sensorId, position.latitude, position.longitude,
-            address, zone, spotState));
+            isElectric, address, zone, spotState));
       }
     } catch (e) {
       print(e.toString());
@@ -328,8 +330,8 @@ class SqlService {
     return zones;
   }
 
-  static Future<String> addSensor(
-      String sensorId, LatLng latLng, Address address, int zoneId) async {
+  static Future<String> addSensor(String sensorId, LatLng latLng,
+      bool isElectric, Address address, int zoneId) async {
     int addressId = await SqlService.getAddressId(address);
 
     if (addressId == -1) {
@@ -348,11 +350,12 @@ class SqlService {
     try {
       print('Address id: $addressId');
       var res = await pool.execute(
-        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `address_id`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :address_id, :zone_id)",
+        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `is_electric`, `address_id`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :is_electric, :address_id, :zone_id)",
         {
           "sensor_id": int.parse(sensorId),
           "latitude": latLng.latitude,
           "longitude": latLng.longitude,
+          "is_electric": isElectric,
           "address_id": addressId,
           "zone_id": zoneId,
         },
@@ -678,6 +681,7 @@ class SqlService {
       var row = result.rows.first;
       double lat = row.typedColByName<double>("latitude")!;
       double long = row.typedColByName<double>("longitude")!;
+      bool isElectric = row.typedColByName<bool>("is_electric")!;
       int addressId = row.typedColByName<int>("address_id")!;
       int zoneId = row.typedColByName<int>("zone_id")!;
 
@@ -690,7 +694,7 @@ class SqlService {
           fetchState ? await getSensorStatus(sensorId) : SpotState.unknown;
 
       return ((SpotInfo(sensorId, position.latitude, position.longitude,
-          address, zone, spotState)));
+          isElectric, address, zone, spotState)));
     } catch (e) {
       print(e.toString());
       return null;

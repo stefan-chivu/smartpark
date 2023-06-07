@@ -11,4 +11,7 @@ abstract class Constants {
   static const timeoutDuration = Duration(seconds: 7);
   static const sqlTimeoutDuration = Duration(seconds: 5);
   static const String sqlTimeoutMessage = 'SQL connection timed out';
+
+  static const String mapStyleString =
+      '[{"featureType":"poi.business","stylers":[{"visibility":"off"}]},{"featureType":"poi.park","elementType":"labels.text","stylers":[{"visibility":"off"}]}]';
 }

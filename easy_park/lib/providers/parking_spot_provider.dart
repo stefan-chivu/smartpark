@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/screens/sensor/details.dart';
 import 'package:easy_park/services/sql.dart';
@@ -15,7 +17,7 @@ final spotProvider =
       await SqlService.getParkingSpotsAroundPosition(
           input.position!.latitude, input.position!.longitude, 1);
 
-  if (input.context != null) {
+  if (input.context != null && input.initialized != null) {
     int spotNo = parkingSpots
         .where((element) => element.state != SpotState.occupied)
         .length;
@@ -38,20 +40,25 @@ final spotProvider =
     ));
   }
 
+  Set<Marker> markers =
+      await getMarkers(input.context!, parkingSpots, input.position!);
+
   return SpotListData(
       location: locationData,
       searchPosition: input.position!,
-      spots: parkingSpots);
+      spots: parkingSpots,
+      markers: markers);
 });
 
-Set<Marker> getMarkers(
-    BuildContext context, List<SpotInfo>? spots, LatLng location) {
+Future<Set<Marker>> getMarkers(
+    BuildContext context, List<SpotInfo>? spots, LatLng location) async {
   if (spots == null) {
     return {};
   }
 
   Set<Marker> markers = {};
   for (SpotInfo spot in spots) {
+    BitmapDescriptor icon = await getMarkerIcon(spot);
     markers.add(Marker(
         markerId: MarkerId(spot.sensorId.toString()),
         position: LatLng(spot.latitude, spot.longitude), //position of marker
@@ -72,36 +79,67 @@ Set<Marker> getMarkers(
                 });
           },
         ),
-        icon: getMarkerIcon(spot.state)));
+        icon: icon));
   }
 
   return markers;
 }
 
-BitmapDescriptor getMarkerIcon(SpotState state) {
-  switch (state) {
-    case SpotState.occupied:
-      return BitmapDescriptor.defaultMarker;
-    case SpotState.free:
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
-    case SpotState.reserved:
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
-    case SpotState.freeingSoon:
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet);
-    default:
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+Future<BitmapDescriptor> getMarkerIcon(SpotInfo spot) async {
+  IconData iconData = Icons.local_parking_rounded;
+  if (spot.isElectric) {
+    iconData = Icons.electrical_services_rounded;
   }
+  Color iconColor;
+  switch (spot.state) {
+    case SpotState.occupied:
+      iconColor = AppColors.orangeRed;
+      break;
+    case SpotState.free:
+      iconColor = AppColors.emerald;
+      break;
+    case SpotState.reserved:
+      iconColor = AppColors.sandyBrown;
+      break;
+    case SpotState.freeingSoon:
+      iconColor = Colors.purple[600]!;
+      break;
+    default:
+      iconColor = Colors.blue[800]!;
+      break;
+  }
+
+  final pictureRecorder = PictureRecorder();
+  final canvas = Canvas(pictureRecorder);
+  final textPainter = TextPainter(textDirection: TextDirection.ltr);
+  final iconStr = String.fromCharCode(iconData.codePoint);
+  textPainter.text = TextSpan(
+      text: iconStr,
+      style: TextStyle(
+        letterSpacing: 0.0,
+        fontSize: 96.0,
+        fontFamily: iconData.fontFamily,
+        color: iconColor,
+      ));
+  textPainter.layout();
+  textPainter.paint(canvas, const Offset(0.0, 0.0));
+  final picture = pictureRecorder.endRecording();
+  final image = await picture.toImage(96, 96);
+  final bytes = await image.toByteData(format: ImageByteFormat.png);
+  return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
 }
 
 class SpotListData {
   LatLng searchPosition;
   List<SpotInfo> spots;
   Position location;
+  Set<Marker> markers;
 
   SpotListData(
       {required this.location,
       required this.spots,
-      required this.searchPosition});
+      required this.searchPosition,
+      required this.markers});
 }
 
 class SpotProviderInput {
@@ -109,7 +147,12 @@ class SpotProviderInput {
   LatLng? position;
   double sensorRangeKm;
   List<SpotInfo>? spots;
+  bool? initialized = false;
 
   SpotProviderInput(
-      {this.context, this.position, this.sensorRangeKm = 1, this.spots});
+      {this.context,
+      this.position,
+      this.sensorRangeKm = 1,
+      this.spots,
+      this.initialized});
 }
