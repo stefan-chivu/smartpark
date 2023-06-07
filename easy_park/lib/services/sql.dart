@@ -7,7 +7,7 @@ import 'package:easy_park/models/day_schedule.dart';
 import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/models/isar_user.dart';
 import 'package:easy_park/models/parking_history.dart';
-import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/services/constants.dart';

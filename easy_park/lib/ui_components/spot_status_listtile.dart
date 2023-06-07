@@ -1,6 +1,5 @@
-import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/services/location.dart';
-import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/ui_specs.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
