@@ -70,10 +70,10 @@ class _NavigationPageState extends State<NavigationPage> {
           allowsUTurnAtWayPoints: true,
           mode: MapBoxNavigationMode.drivingWithTraffic,
           units: VoiceUnits.metric,
-          simulateRoute: false,
+          simulateRoute: true,
           longPressDestinationEnabled: false,
           // pois: _pois,
-          mapStyleUrlDay: "mapbox://styles/mapbox/navigation-day-v1",
+          mapStyleUrlDay: "mapbox://styles/mapbox/streets-v12",
           mapStyleUrlNight: "mapbox://styles/mapbox/navigation-night-v1",
           language: "en");
 
@@ -106,12 +106,16 @@ class _NavigationPageState extends State<NavigationPage> {
                 child:
                     Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                   _instructionDistance != null
-                      ? Text(
-                          _instructionDistance!,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppFontSizes.XL,
-                              color: Colors.white),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppMargins.M),
+                          child: Text(
+                            _instructionDistance!,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: AppFontSizes.XL,
+                                color: Colors.white),
+                          ),
                         )
                       : const Text(""),
                   Text(
@@ -159,9 +163,11 @@ class _NavigationPageState extends State<NavigationPage> {
 
               timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
                 if (_timerOpsCompleted) {
-                  setState(() {
-                    _timerOpsCompleted = false;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _timerOpsCompleted = false;
+                    });
+                  }
                   SpotState status =
                       await SqlService.getSensorStatus(spot.sensorId);
 
@@ -251,9 +257,11 @@ class _NavigationPageState extends State<NavigationPage> {
                     }
                   }
 
-                  setState(() {
-                    _timerOpsCompleted = true;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _timerOpsCompleted = true;
+                    });
+                  }
                 } else {
                   print("Timer not completed");
                 }
