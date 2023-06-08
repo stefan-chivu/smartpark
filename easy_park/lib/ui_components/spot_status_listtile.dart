@@ -23,8 +23,11 @@ class SpotStatusListTile extends StatelessWidget {
     switch (spot.state) {
       case SpotState.free:
         spotColor = Colors.green;
-        spotIcon = Icons.time_to_leave;
-        spotStatus = 'Available';
+        spotIcon = spot.isElectric
+            ? Icons.electric_car_rounded
+            : Icons.time_to_leave_rounded;
+        spotStatus =
+            spot.isElectric ? 'Available charging station' : 'Available';
         break;
       case SpotState.reserved:
         spotColor = Colors.orange;
