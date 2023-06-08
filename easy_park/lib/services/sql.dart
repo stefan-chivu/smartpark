@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+import 'package:collection/collection.dart';
 
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
@@ -642,6 +643,10 @@ class SqlService {
         String parkingEnd = row.typedColByName<String>('parking_end')!;
 
         SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        Duration duration = DateTime.parse(parkingStart)
+            .difference(DateTime.parse(parkingEnd))
+            .abs();
         if (spot != null) {
           parkingHistoryList.add(ParkingPayment(
               id: paymentId,
@@ -650,11 +655,77 @@ class SqlService {
               totalSum: totalSum,
               timestamp: DateTime.parse(timestamp),
               parkingStart: DateTime.parse(parkingStart),
-              parkingEnd: DateTime.parse(parkingEnd)));
+              parkingEnd: DateTime.parse(parkingEnd),
+              state: PaymentState.paid,
+              parkingDuration: duration));
+        }
+      }
+
+      result = await pool.execute(
+          "SELECT * FROM `Occupancy` WHERE car_id = :car_id ORDER BY timestamp ASC",
+          {"car_id": car.carId});
+
+      List<ResultSetRow> resultList = result.rows.toList();
+
+      int length = result.rows.length;
+
+      if (length.isOdd) {
+        length--;
+      }
+
+      for (int i = 0; i < length; i += 2) {
+        int sensorId = resultList[i].typedColByName<int>('sensor_id')!;
+        int startEntryId = resultList[i].typedColByName<int>('entry_id')!;
+        int endEntryId = resultList[i + 1].typedColByName<int>('entry_id')!;
+        String startTimestamp =
+            resultList[i].typedColByName<String>('timestamp')!;
+        String stopTimestamp =
+            resultList[i + 1].typedColByName<String>('timestamp')!;
+
+        SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        if (spot != null) {
+          Duration duration = DateTime.parse(startTimestamp)
+              .difference(DateTime.parse(stopTimestamp))
+              .abs();
+          // TODO: Handle spots with day rates differently
+          double totalSum = duration.inMinutes / 60 * spot.zone.hourRate;
+          parkingHistoryList.add(ParkingPayment(
+              spot: spot,
+              car: car,
+              totalSum: totalSum,
+              parkingStart: DateTime.parse(startTimestamp),
+              parkingEnd: DateTime.parse(stopTimestamp),
+              state: PaymentState.due,
+              parkingDuration: duration,
+              startEntryId: startEntryId,
+              endEntryId: endEntryId));
+        }
+      }
+
+      if (resultList.length.isOdd) {
+        int sensorId = resultList[length].typedColByName<int>('sensor_id')!;
+        SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        if (spot != null) {
+          String startTimestamp =
+              resultList[length].typedColByName<String>('timestamp')!;
+          Duration duration =
+              DateTime.parse(startTimestamp).difference(DateTime.now()).abs();
+          double totalSum = (duration.inMinutes / 60 * spot.zone.hourRate);
+
+          parkingHistoryList.add(ParkingPayment(
+              spot: spot,
+              car: car,
+              totalSum: totalSum,
+              parkingStart: DateTime.parse(startTimestamp),
+              state: PaymentState.ongoing,
+              parkingDuration: duration));
         }
       }
     }
 
+    parkingHistoryList.sortBy<num>((element) => element.state.index);
     return parkingHistoryList;
   }
 
@@ -699,5 +770,32 @@ class SqlService {
       print(e.toString());
       return null;
     }
+  }
+
+  static Future<void> handlePayment(ParkingPayment parkingHistory) async {
+    if (parkingHistory.startEntryId == null ||
+        parkingHistory.endEntryId == null) {
+      throw Exception();
+    }
+
+    await pool.execute(
+      "INSERT INTO `Payments` (`sensor_id`, `car_id`, `total_sum`, `parking_start`, `parking_end`) VALUES (:sensor_id, :car_id, :total_sum, :parking_start, :parking_end)",
+      {
+        "sensor_id": parkingHistory.spot.sensorId,
+        "car_id": parkingHistory.car.carId,
+        "total_sum": parkingHistory.totalSum,
+        "parking_start": parkingHistory.parkingStart,
+        "parking_end": parkingHistory.parkingEnd,
+      },
+    ).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+
+    await pool.execute(
+        "DELETE FROM `Occupancy` WHERE `entry_id` IN (:start_entry_id, :end_entry_id)",
+        {
+          "start_entry_id": parkingHistory.startEntryId,
+          "end_entry_id": parkingHistory.endEntryId
+        }).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
   }
 }

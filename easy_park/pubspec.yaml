@@ -47,6 +47,7 @@ dependencies:
   uuid: ^3.0.7
   intl: ^0.17.0
   flutter_mapbox: ^0.5.8
+  checkout_screen_ui: ^0.1.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
