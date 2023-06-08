@@ -677,6 +677,15 @@ class SqlService {
         int sensorId = resultList[i].typedColByName<int>('sensor_id')!;
         int startEntryId = resultList[i].typedColByName<int>('entry_id')!;
         int endEntryId = resultList[i + 1].typedColByName<int>('entry_id')!;
+        bool startOccupied = resultList[i].typedColByName<bool>('occupied')!;
+        bool endOccupied = resultList[i + 1].typedColByName<bool>('occupied')!;
+
+        // TODO: treat this error case better
+        if (!startOccupied || endOccupied) {
+          print("An issue has occured with the user's data");
+          continue;
+        }
+
         String startTimestamp =
             resultList[i].typedColByName<String>('timestamp')!;
         String stopTimestamp =
@@ -688,8 +697,20 @@ class SqlService {
           Duration duration = DateTime.parse(startTimestamp)
               .difference(DateTime.parse(stopTimestamp))
               .abs();
-          // TODO: Handle spots with day rates differently
-          double totalSum = duration.inMinutes / 60 * spot.zone.hourRate;
+          double totalSum = 0;
+          int minutes = duration.inMinutes % 60;
+          int hours = duration.inHours % 24;
+          int days = duration.inDays;
+          if (spot.zone.dayRate != null) {
+            totalSum += days * spot.zone.dayRate!;
+            if (hours > 4) {
+              totalSum += spot.zone.dayRate!;
+            } else {
+              totalSum += spot.zone.hourRate * (minutes / 60 + hours);
+            }
+          } else {
+            totalSum = duration.inMinutes / 60 * spot.zone.hourRate;
+          }
           parkingHistoryList.add(ParkingPayment(
               spot: spot,
               car: car,
