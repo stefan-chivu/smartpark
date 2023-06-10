@@ -32,10 +32,6 @@ class CustomNavBar extends StatelessWidget {
             label: " History",
             backgroundColor: AppColors.slateGray),
         BottomNavigationBarItem(
-            icon: Icon(Icons.payment),
-            label: "Pay",
-            backgroundColor: AppColors.slateGray),
-        BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: "Spots",
             backgroundColor: AppColors.slateGray)
@@ -52,22 +48,6 @@ class CustomNavBar extends StatelessWidget {
             Navigator.pushNamed(context, '/history');
             break;
           case 3:
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: const Text('Pay for parking'),
-                actions: <TextButton>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  )
-                ],
-              ),
-            );
-            break;
-          case 4:
             Navigator.pushNamed(
               context,
               '/spot-list',
