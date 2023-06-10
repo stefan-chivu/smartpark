@@ -1,4 +1,4 @@
-import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/providers/parking_spot_provider.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';

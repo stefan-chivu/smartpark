@@ -8,9 +8,10 @@ class SpotInfo {
   int sensorId;
   double latitude;
   double longitude;
+  bool isElectric;
   Address address;
   Zone zone;
   SpotState state;
-  SpotInfo(this.sensorId, this.latitude, this.longitude, this.address,
-      this.zone, this.state);
+  SpotInfo(this.sensorId, this.latitude, this.longitude, this.isElectric,
+      this.address, this.zone, this.state);
 }

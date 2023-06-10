@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/screens/error.dart';
 import 'package:easy_park/services/sql.dart';
 import 'package:easy_park/ui_components/custom_nav_bar.dart';
@@ -26,7 +26,8 @@ class _NavigationPageState extends State<NavigationPage> {
   MapBoxOptions? _options;
 
   bool _isMultipleStop = false;
-  double? _distanceRemaining, _durationRemaining;
+  double _distanceRemaining = -1;
+  double _durationRemaining = -1;
   MapBoxNavigationViewController? _controller;
   bool _routeBuilt = false;
   bool _isNavigating = false;
@@ -69,10 +70,10 @@ class _NavigationPageState extends State<NavigationPage> {
           allowsUTurnAtWayPoints: true,
           mode: MapBoxNavigationMode.drivingWithTraffic,
           units: VoiceUnits.metric,
-          simulateRoute: false,
+          simulateRoute: true,
           longPressDestinationEnabled: false,
           // pois: _pois,
-          mapStyleUrlDay: "mapbox://styles/mapbox/navigation-day-v1",
+          mapStyleUrlDay: "mapbox://styles/mapbox/streets-v12",
           mapStyleUrlNight: "mapbox://styles/mapbox/navigation-night-v1",
           language: "en");
 
@@ -100,20 +101,23 @@ class _NavigationPageState extends State<NavigationPage> {
           visible: _isNavigating,
           child: SizedBox.fromSize(
               size: const Size.fromHeight(AppMargins.XXXL),
-              child: Expanded(
-                  child: Container(
+              child: Container(
                 color: AppColors.pineTree,
                 child:
                     Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                   _instructionDistance != null
-                      ? Text(
-                          _instructionDistance!,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppFontSizes.XL,
-                              color: Colors.white),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppMargins.M),
+                          child: Text(
+                            _instructionDistance!,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: AppFontSizes.XL,
+                                color: Colors.white),
+                          ),
                         )
-                      : Container(),
+                      : const Text(""),
                   Text(
                     _instruction ?? '',
                     style: const TextStyle(
@@ -125,11 +129,10 @@ class _NavigationPageState extends State<NavigationPage> {
                     height: AppMargins.M,
                   ),
                 ]),
-              ))),
+              )),
         ),
         if (_options != null)
           Expanded(
-            flex: 1,
             child: MapBoxNavigationView(
                 options: _options,
                 onRouteEvent: _onEmbeddedRouteEvent,
@@ -160,9 +163,11 @@ class _NavigationPageState extends State<NavigationPage> {
 
               timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
                 if (_timerOpsCompleted) {
-                  setState(() {
-                    _timerOpsCompleted = false;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _timerOpsCompleted = false;
+                    });
+                  }
                   SpotState status =
                       await SqlService.getSensorStatus(spot.sensorId);
 
@@ -235,7 +240,9 @@ class _NavigationPageState extends State<NavigationPage> {
                                           spot.sensorId);
 
                                       // Close the dialog
-                                      Navigator.of(context).pop();
+                                      if (mounted) {
+                                        Navigator.of(context).pop();
+                                      }
                                     },
                                     child: const Text('Yes')),
                                 TextButton(
@@ -250,9 +257,11 @@ class _NavigationPageState extends State<NavigationPage> {
                     }
                   }
 
-                  setState(() {
-                    _timerOpsCompleted = true;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _timerOpsCompleted = true;
+                    });
+                  }
                 } else {
                   print("Timer not completed");
                 }
@@ -289,7 +298,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     top: BorderSide(width: 0.1, color: AppColors.slateGray))),
             child: Row(children: [
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.25),
                 child: Padding(
                   padding: const EdgeInsets.all(AppMargins.S),
                   child: Visibility(
@@ -304,7 +313,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         'Stop',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: AppFontSizes.L),
+                            fontSize: AppFontSizes.M),
                       ),
                       onPressed: () async {
                         _controller!.finishNavigation();
@@ -330,7 +339,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 ),
               ),
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.4),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.5),
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -338,9 +347,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _durationRemaining != null
-                                ? "${(_durationRemaining! / 60).round()} min"
-                                : "",
+                            "${(_durationRemaining / 60).round()} min",
                             style: const TextStyle(
                               fontSize: AppFontSizes.L,
                             ),
@@ -352,9 +359,7 @@ class _NavigationPageState extends State<NavigationPage> {
                             ),
                           ),
                           Text(
-                            _distanceRemaining != null
-                                ? showDistanceRemaining(_distanceRemaining!)
-                                : "",
+                            showDistanceRemaining(_distanceRemaining),
                             style: const TextStyle(
                               fontSize: AppFontSizes.L,
                             ),
@@ -364,7 +369,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     ]),
               ),
               SizedBox.fromSize(
-                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.3),
+                size: Size.fromWidth(MediaQuery.of(context).size.width * 0.25),
                 child: Container(),
               )
             ]),
@@ -376,8 +381,10 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   Future<void> _onEmbeddedRouteEvent(e) async {
-    _distanceRemaining = await _controller!.distanceRemaining;
-    _durationRemaining = await _controller!.durationRemaining;
+    if (_controller != null) {
+      _distanceRemaining = await _controller!.distanceRemaining;
+      _durationRemaining = await _controller!.durationRemaining;
+    }
     print(e.eventType);
 
     if (prevEvent == null) {
@@ -397,7 +404,13 @@ class _NavigationPageState extends State<NavigationPage> {
           setState(() {
             _instruction = progressEvent.currentStepInstruction;
             _instructionDistance = progressEvent.currentLeg != null
-                ? showDistanceRemaining(progressEvent.distance ?? 0)
+                ? progressEvent.currentLeg!.steps != null
+                    ? progressEvent.currentLeg!.steps!.isNotEmpty
+                        ? showDistanceRemaining(
+                            progressEvent.currentLeg!.steps!.first.distance ??
+                                0)
+                        : ""
+                    : ""
                 : "";
           });
         }

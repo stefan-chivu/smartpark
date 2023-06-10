@@ -1,13 +1,15 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 
 import 'package:easy_park/models/address.dart';
 import 'package:easy_park/models/day_schedule.dart';
 import 'package:easy_park/models/isar_car.dart';
 import 'package:easy_park/models/isar_user.dart';
 import 'package:easy_park/models/parking_history.dart';
-import 'package:easy_park/models/parking_info.dart';
+import 'package:easy_park/models/spot_info.dart';
 import 'package:easy_park/models/schedule.dart';
 import 'package:easy_park/models/zone.dart';
 import 'package:easy_park/services/constants.dart';
@@ -32,7 +34,6 @@ class SqlService {
       timeoutMs: 2000);
 
   static final Map<int, Zone> _zones = {};
-  static final Map<int, Address> _addresses = {};
 
   SqlService._privateConstructor();
   static final SqlService instance = SqlService._privateConstructor();
@@ -60,18 +61,22 @@ class SqlService {
         int sensorId = row.typedColByName<int>("sensor_id")!;
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
-        int addressId = row.typedColByName<int>("address_id")!;
+        bool isElectric = row.typedColByName<bool>("is_electric")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
-
-        LatLng position = LatLng(lat, long);
-
-        Address address = await getAddressById(addressId);
-        Zone zone = await getZoneById(zoneId);
 
         SpotState spotState = await getSensorStatus(sensorId);
 
+        if (spotState == SpotState.occupied) {
+          // Skip occupied spots
+          continue;
+        }
+
+        LatLng position = LatLng(lat, long);
+        Address address = await LocationService.addressFromLatLng(lat, long);
+        Zone zone = await getZoneById(zoneId);
+
         parkingInfo.add((SpotInfo(sensorId, position.latitude,
-            position.longitude, address, zone, spotState)));
+            position.longitude, isElectric, address, zone, spotState)));
       }
     } catch (e) {
       print(e.toString());
@@ -83,30 +88,25 @@ class SqlService {
     print("Fetching sensor $sensorId status");
     try {
       var occupancyQuery = await pool.execute(
-          "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC LIMIT 1",
+          "SELECT o.occupied, r.reservation_count FROM (SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC LIMIT 1) AS o, (SELECT COUNT(*) AS reservation_count FROM Reservations WHERE spot_id = :sensorId) AS r",
           {
             "sensorId": sensorId
           }).timeout(Constants.sqlTimeoutDuration,
           onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
       ResultSetRow data = occupancyQuery.rows.first;
       bool occupied = data.typedColByName<bool>("occupied")!;
-
-      var reservedQuery = await pool.execute(
-          "SELECT * FROM Reservations WHERE spot_id = :sensorId", {
-        "sensorId": sensorId
-      }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+      int reservationCount = data.typedColByName<int>("reservation_count")!;
 
       if (occupied) {
         return SpotState.occupied;
       }
 
-      if (reservedQuery.rows.isNotEmpty) {
+      if (reservationCount > 0) {
         return SpotState.reserved;
       }
-
       return SpotState.free;
     } catch (e) {
+      print(e.toString());
       return SpotState.unknown;
     }
   }
@@ -168,42 +168,22 @@ class SqlService {
         }
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
-        int addressId = row.typedColByName<int>("address_id")!;
+        bool isElectric = row.typedColByName<bool>("is_electric")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
 
         LatLng position = LatLng(lat, long);
 
-        Address address = await getAddressById(addressId);
+        Address address = await LocationService.addressFromLatLng(lat, long);
         Zone zone = await getZoneById(zoneId);
 
         return (SpotInfo(sensorId, position.latitude, position.longitude,
-            address, zone, spotState));
+            isElectric, address, zone, spotState));
       }
     } catch (e) {
       print(e.toString());
       return null;
     }
     return null;
-  }
-
-  static Future<Address> getAddressById(int addressId) async {
-    if (_addresses[addressId] == null) {
-      var result = await pool.execute(
-          "SELECT * FROM Addresses WHERE address_id = :addressId", {
-        "addressId": addressId
-      }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-
-      String street = data.typedColByName<String>("street")!;
-      String city = data.typedColByName<String>("city")!;
-      String region = data.typedColByName<String>("region")!;
-      String country = data.typedColByName<String>("country")!;
-
-      _addresses[addressId] = Address(street, city, region, country);
-    }
-
-    return _addresses[addressId]!;
   }
 
   static Future<Zone> getZoneById(int zoneId) async {
@@ -329,31 +309,15 @@ class SqlService {
   }
 
   static Future<String> addSensor(
-      String sensorId, LatLng latLng, Address address, int zoneId) async {
-    int addressId = await SqlService.getAddressId(address);
-
-    if (addressId == -1) {
-      print("Failed to obtain address");
-      addressId = await SqlService.createAddress(address);
-      for (int attempts = 0; attempts < 3 && addressId == -1; attempts++) {
-        print("Fetching new address. Attempt $attempts");
-        addressId = await SqlService.getAddressId(address);
-      }
-    }
-
-    if (addressId == -1) {
-      return "Failed creating new address";
-    }
-
+      String sensorId, LatLng latLng, bool isElectric, int zoneId) async {
     try {
-      print('Address id: $addressId');
       var res = await pool.execute(
-        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `address_id`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :address_id, :zone_id)",
+        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `is_electric`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :is_electric, :zone_id)",
         {
           "sensor_id": int.parse(sensorId),
           "latitude": latLng.latitude,
           "longitude": latLng.longitude,
-          "address_id": addressId,
+          "is_electric": isElectric,
           "zone_id": zoneId,
         },
       ).timeout(Constants.sqlTimeoutDuration,
@@ -372,61 +336,6 @@ class SqlService {
       return e.toString();
     }
     return "Sensor added successfully";
-  }
-
-  static Future<int> getAddressId(Address address) async {
-    int id = -1;
-    try {
-      var result = await pool.execute(
-          "SELECT address_id FROM Addresses WHERE street = :street AND city = :city AND region = :region AND country = :country",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-      id = data.typedColByName<int>("address_id")!;
-    } catch (e) {
-      if (!e.toString().contains('Bad state: No element')) {
-        return -1;
-      }
-    }
-    return id;
-  }
-
-  static Future<int> createAddress(Address address) async {
-    int id = -1;
-    try {
-      print("Inserting new addrress.");
-      var result = await pool.execute(
-          "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-
-      result = await pool.execute(
-          "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-      id = data.typedColByName<int>("address_id")!;
-    } catch (e) {
-      print("Failed inserting new addrress: ${e.toString()}");
-      id = -1;
-    }
-
-    return id;
   }
 
   static Future<IsarUser?> getUser(String uid, String email) async {
@@ -639,6 +548,10 @@ class SqlService {
         String parkingEnd = row.typedColByName<String>('parking_end')!;
 
         SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        Duration duration = DateTime.parse(parkingStart)
+            .difference(DateTime.parse(parkingEnd))
+            .abs();
         if (spot != null) {
           parkingHistoryList.add(ParkingPayment(
               id: paymentId,
@@ -647,11 +560,98 @@ class SqlService {
               totalSum: totalSum,
               timestamp: DateTime.parse(timestamp),
               parkingStart: DateTime.parse(parkingStart),
-              parkingEnd: DateTime.parse(parkingEnd)));
+              parkingEnd: DateTime.parse(parkingEnd),
+              state: PaymentState.paid,
+              parkingDuration: duration));
+        }
+      }
+
+      result = await pool.execute(
+          "SELECT * FROM `Occupancy` WHERE car_id = :car_id ORDER BY timestamp ASC",
+          {"car_id": car.carId});
+
+      List<ResultSetRow> resultList = result.rows.toList();
+
+      int length = result.rows.length;
+
+      if (length.isOdd) {
+        length--;
+      }
+
+      for (int i = 0; i < length; i += 2) {
+        int sensorId = resultList[i].typedColByName<int>('sensor_id')!;
+        int startEntryId = resultList[i].typedColByName<int>('entry_id')!;
+        int endEntryId = resultList[i + 1].typedColByName<int>('entry_id')!;
+        bool startOccupied = resultList[i].typedColByName<bool>('occupied')!;
+        bool endOccupied = resultList[i + 1].typedColByName<bool>('occupied')!;
+
+        // TODO: treat this error case better
+        if (!startOccupied || endOccupied) {
+          print("An issue has occured with the user's data");
+          continue;
+        }
+
+        String startTimestamp =
+            resultList[i].typedColByName<String>('timestamp')!;
+        String stopTimestamp =
+            resultList[i + 1].typedColByName<String>('timestamp')!;
+
+        SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        if (spot != null) {
+          Duration duration = DateTime.parse(startTimestamp)
+              .difference(DateTime.parse(stopTimestamp))
+              .abs();
+          double totalSum = 0;
+          int minutes = duration.inMinutes % 60;
+          int hours = duration.inHours % 24;
+          int days = duration.inDays;
+          if (spot.zone.dayRate != null) {
+            totalSum += days * spot.zone.dayRate!;
+            if (hours > 4) {
+              totalSum += spot.zone.dayRate!;
+            } else {
+              totalSum += spot.zone.hourRate * (minutes / 60 + hours);
+            }
+          } else {
+            totalSum = duration.inMinutes / 60 * spot.zone.hourRate;
+          }
+          parkingHistoryList.add(ParkingPayment(
+              spot: spot,
+              car: car,
+              totalSum: totalSum,
+              parkingStart: DateTime.parse(startTimestamp),
+              parkingEnd: DateTime.parse(stopTimestamp),
+              state: PaymentState.due,
+              parkingDuration: duration,
+              startEntryId: startEntryId,
+              endEntryId: endEntryId));
+        }
+      }
+
+      if (resultList.length.isOdd) {
+        int sensorId = resultList[length].typedColByName<int>('sensor_id')!;
+        SpotInfo? spot = await getSpotById(sensorId, fetchState: false);
+
+        if (spot != null) {
+          String startTimestamp =
+              resultList[length].typedColByName<String>('timestamp')!;
+          Duration duration =
+              DateTime.parse(startTimestamp).difference(DateTime.now()).abs();
+          double totalSum = (duration.inMinutes / 60 * spot.zone.hourRate);
+
+          parkingHistoryList.add(ParkingPayment(
+              spot: spot,
+              car: car,
+              totalSum: totalSum,
+              parkingStart: DateTime.parse(startTimestamp),
+              state: PaymentState.ongoing,
+              parkingDuration: duration));
         }
       }
     }
 
+    parkingHistoryList.sortBy<num>((element) => element.state.index);
     return parkingHistoryList;
   }
 
@@ -678,22 +678,49 @@ class SqlService {
       var row = result.rows.first;
       double lat = row.typedColByName<double>("latitude")!;
       double long = row.typedColByName<double>("longitude")!;
-      int addressId = row.typedColByName<int>("address_id")!;
+      bool isElectric = row.typedColByName<bool>("is_electric")!;
       int zoneId = row.typedColByName<int>("zone_id")!;
 
       LatLng position = LatLng(lat, long);
 
-      Address address = await getAddressById(addressId);
+      Address address = await LocationService.addressFromLatLng(lat, long);
       Zone zone = await getZoneById(zoneId);
 
       SpotState spotState =
           fetchState ? await getSensorStatus(sensorId) : SpotState.unknown;
 
       return ((SpotInfo(sensorId, position.latitude, position.longitude,
-          address, zone, spotState)));
+          isElectric, address, zone, spotState)));
     } catch (e) {
       print(e.toString());
       return null;
     }
+  }
+
+  static Future<void> handlePayment(ParkingPayment parkingHistory) async {
+    if (parkingHistory.startEntryId == null ||
+        parkingHistory.endEntryId == null) {
+      throw Exception();
+    }
+
+    await pool.execute(
+      "INSERT INTO `Payments` (`sensor_id`, `car_id`, `total_sum`, `parking_start`, `parking_end`) VALUES (:sensor_id, :car_id, :total_sum, :parking_start, :parking_end)",
+      {
+        "sensor_id": parkingHistory.spot.sensorId,
+        "car_id": parkingHistory.car.carId,
+        "total_sum": parkingHistory.totalSum,
+        "parking_start": parkingHistory.parkingStart,
+        "parking_end": parkingHistory.parkingEnd,
+      },
+    ).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+
+    await pool.execute(
+        "DELETE FROM `Occupancy` WHERE `entry_id` IN (:start_entry_id, :end_entry_id)",
+        {
+          "start_entry_id": parkingHistory.startEntryId,
+          "end_entry_id": parkingHistory.endEntryId
+        }).timeout(Constants.sqlTimeoutDuration,
+        onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
   }
 }
