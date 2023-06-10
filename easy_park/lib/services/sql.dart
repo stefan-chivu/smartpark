@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 
 import 'package:easy_park/models/address.dart';
@@ -33,7 +34,6 @@ class SqlService {
       timeoutMs: 2000);
 
   static final Map<int, Zone> _zones = {};
-  static final Map<int, Address> _addresses = {};
 
   SqlService._privateConstructor();
   static final SqlService instance = SqlService._privateConstructor();
@@ -62,15 +62,18 @@ class SqlService {
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
         bool isElectric = row.typedColByName<bool>("is_electric")!;
-        int addressId = row.typedColByName<int>("address_id")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
 
-        LatLng position = LatLng(lat, long);
-
-        Address address = await getAddressById(addressId);
-        Zone zone = await getZoneById(zoneId);
-
         SpotState spotState = await getSensorStatus(sensorId);
+
+        if (spotState == SpotState.occupied) {
+          // Skip occupied spots
+          continue;
+        }
+
+        LatLng position = LatLng(lat, long);
+        Address address = await LocationService.addressFromLatLng(lat, long);
+        Zone zone = await getZoneById(zoneId);
 
         parkingInfo.add((SpotInfo(sensorId, position.latitude,
             position.longitude, isElectric, address, zone, spotState)));
@@ -85,30 +88,25 @@ class SqlService {
     print("Fetching sensor $sensorId status");
     try {
       var occupancyQuery = await pool.execute(
-          "SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC LIMIT 1",
+          "SELECT o.occupied, r.reservation_count FROM (SELECT occupied FROM Occupancy WHERE sensor_id = :sensorId ORDER BY timestamp DESC LIMIT 1) AS o, (SELECT COUNT(*) AS reservation_count FROM Reservations WHERE spot_id = :sensorId) AS r",
           {
             "sensorId": sensorId
           }).timeout(Constants.sqlTimeoutDuration,
           onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
       ResultSetRow data = occupancyQuery.rows.first;
       bool occupied = data.typedColByName<bool>("occupied")!;
-
-      var reservedQuery = await pool.execute(
-          "SELECT * FROM Reservations WHERE spot_id = :sensorId", {
-        "sensorId": sensorId
-      }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
+      int reservationCount = data.typedColByName<int>("reservation_count")!;
 
       if (occupied) {
         return SpotState.occupied;
       }
 
-      if (reservedQuery.rows.isNotEmpty) {
+      if (reservationCount > 0) {
         return SpotState.reserved;
       }
-
       return SpotState.free;
     } catch (e) {
+      print(e.toString());
       return SpotState.unknown;
     }
   }
@@ -171,12 +169,11 @@ class SqlService {
         double lat = row.typedColByName<double>("latitude")!;
         double long = row.typedColByName<double>("longitude")!;
         bool isElectric = row.typedColByName<bool>("is_electric")!;
-        int addressId = row.typedColByName<int>("address_id")!;
         int zoneId = row.typedColByName<int>("zone_id")!;
 
         LatLng position = LatLng(lat, long);
 
-        Address address = await getAddressById(addressId);
+        Address address = await LocationService.addressFromLatLng(lat, long);
         Zone zone = await getZoneById(zoneId);
 
         return (SpotInfo(sensorId, position.latitude, position.longitude,
@@ -187,26 +184,6 @@ class SqlService {
       return null;
     }
     return null;
-  }
-
-  static Future<Address> getAddressById(int addressId) async {
-    if (_addresses[addressId] == null) {
-      var result = await pool.execute(
-          "SELECT * FROM Addresses WHERE address_id = :addressId", {
-        "addressId": addressId
-      }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-
-      String street = data.typedColByName<String>("street")!;
-      String city = data.typedColByName<String>("city")!;
-      String region = data.typedColByName<String>("region")!;
-      String country = data.typedColByName<String>("country")!;
-
-      _addresses[addressId] = Address(street, city, region, country);
-    }
-
-    return _addresses[addressId]!;
   }
 
   static Future<Zone> getZoneById(int zoneId) async {
@@ -331,33 +308,16 @@ class SqlService {
     return zones;
   }
 
-  static Future<String> addSensor(String sensorId, LatLng latLng,
-      bool isElectric, Address address, int zoneId) async {
-    int addressId = await SqlService.getAddressId(address);
-
-    if (addressId == -1) {
-      print("Failed to obtain address");
-      addressId = await SqlService.createAddress(address);
-      for (int attempts = 0; attempts < 3 && addressId == -1; attempts++) {
-        print("Fetching new address. Attempt $attempts");
-        addressId = await SqlService.getAddressId(address);
-      }
-    }
-
-    if (addressId == -1) {
-      return "Failed creating new address";
-    }
-
+  static Future<String> addSensor(
+      String sensorId, LatLng latLng, bool isElectric, int zoneId) async {
     try {
-      print('Address id: $addressId');
       var res = await pool.execute(
-        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `is_electric`, `address_id`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :is_electric, :address_id, :zone_id)",
+        "INSERT INTO `Sensors` (`sensor_id`, `latitude`, `longitude`, `is_electric`, `zone_id`) VALUES (:sensor_id, :latitude, :longitude, :is_electric, :zone_id)",
         {
           "sensor_id": int.parse(sensorId),
           "latitude": latLng.latitude,
           "longitude": latLng.longitude,
           "is_electric": isElectric,
-          "address_id": addressId,
           "zone_id": zoneId,
         },
       ).timeout(Constants.sqlTimeoutDuration,
@@ -376,61 +336,6 @@ class SqlService {
       return e.toString();
     }
     return "Sensor added successfully";
-  }
-
-  static Future<int> getAddressId(Address address) async {
-    int id = -1;
-    try {
-      var result = await pool.execute(
-          "SELECT address_id FROM Addresses WHERE street = :street AND city = :city AND region = :region AND country = :country",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-      id = data.typedColByName<int>("address_id")!;
-    } catch (e) {
-      if (!e.toString().contains('Bad state: No element')) {
-        return -1;
-      }
-    }
-    return id;
-  }
-
-  static Future<int> createAddress(Address address) async {
-    int id = -1;
-    try {
-      print("Inserting new addrress.");
-      var result = await pool.execute(
-          "INSERT INTO `Addresses` (`street`, `city`, `region`, `country`) VALUES (:street, :city, :region, :country)",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-
-      result = await pool.execute(
-          "SELECT address_id FROM `Addresses` WHERE `street` = ':street' AND `city` = ':city' AND `region` = ':region' AND `country` = ':country' ",
-          {
-            "street": address.street,
-            "city": address.city,
-            "region": address.region,
-            "country": address.country,
-          }).timeout(Constants.sqlTimeoutDuration,
-          onTimeout: () => throw TimeoutException(Constants.sqlTimeoutMessage));
-      ResultSetRow data = result.rows.first;
-      id = data.typedColByName<int>("address_id")!;
-    } catch (e) {
-      print("Failed inserting new addrress: ${e.toString()}");
-      id = -1;
-    }
-
-    return id;
   }
 
   static Future<IsarUser?> getUser(String uid, String email) async {
@@ -774,12 +679,11 @@ class SqlService {
       double lat = row.typedColByName<double>("latitude")!;
       double long = row.typedColByName<double>("longitude")!;
       bool isElectric = row.typedColByName<bool>("is_electric")!;
-      int addressId = row.typedColByName<int>("address_id")!;
       int zoneId = row.typedColByName<int>("zone_id")!;
 
       LatLng position = LatLng(lat, long);
 
-      Address address = await getAddressById(addressId);
+      Address address = await LocationService.addressFromLatLng(lat, long);
       Zone zone = await getZoneById(zoneId);
 
       SpotState spotState =

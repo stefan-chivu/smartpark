@@ -176,7 +176,8 @@ class _HomeState extends ConsumerState<Home> {
                           providerInput.position = LatLng(
                               closestSpot.latitude, closestSpot.longitude);
                           ref.refresh(spotProvider(providerInput));
-                          await Future.delayed(const Duration(seconds: 5));
+                          await Future.delayed(
+                              const Duration(milliseconds: 3000));
 
                           setState(() {
                             providerInput.position = result.location!;

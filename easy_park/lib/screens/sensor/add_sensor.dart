@@ -196,7 +196,6 @@ class _AddSensorState extends ConsumerState<AddSensor> {
                             _sensorIdController.text,
                             _sensorPosition!,
                             _hasElectricCharging,
-                            _sensorAddress!,
                             _zoneID!);
                         if (mounted) {
                           if (!result.contains("success")) {
