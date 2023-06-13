@@ -21,7 +21,7 @@ class AuthService {
       // user will be stored locally
       User? user = result.user;
       if (user != null && user.email != null) {
-        IsarUser? isarUser = await SqlService.getUser(user.uid, user.email!);
+        IsarUser? isarUser = await SqlService.getUser(user.uid);
         if (isarUser == null) {
           throw FirebaseAuthException(code: 'sql-error');
         }
