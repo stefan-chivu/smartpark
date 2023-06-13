@@ -1,0 +1,1 @@
+Copy /lib to the board before running the py script
