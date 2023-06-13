@@ -338,7 +338,7 @@ class SqlService {
     return "Sensor added successfully";
   }
 
-  static Future<IsarUser?> getUser(String uid, String email) async {
+  static Future<IsarUser?> getUser(String uid) async {
     try {
       var result = await pool.execute("SELECT * FROM Users WHERE uid = :uid", {
         "uid": uid,
