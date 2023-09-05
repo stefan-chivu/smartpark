@@ -4,7 +4,7 @@
 
 Acest document oferă un ghid pas cu pas pentru pregătirea mediului de dezvoltare și rularea aplicației SmartPark.
 
-#### :warning: ATENȚIE :warning: aplicația SmartPark NU a fost testată pe dispozitive iOS, respectiv configurarea acesteia nu suportă momentan rularea aplicației de pe macOS.
+#### :warning: ATENȚIE :warning: aplicația SmartPark NU a fost testată pe dispozitive iOS, respectiv configuratia acesteia nu suportă momentan rularea aplicației de pe macOS.
 
 ## Pregătirea mediului de dezvoltare
 
